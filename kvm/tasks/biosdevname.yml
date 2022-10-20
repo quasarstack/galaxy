@@ -58,11 +58,18 @@
 
   - name: Generate grub config for ubuntu machines
     command: grub-mkconfig -o /boot/grub/grub.cfg
-    when: ansible_distribution == "Ubuntu"
+    when: ansible_os_family == "Debian"
 
   - name: Generate grub config for RedHat based machines
     command: grub2-mkconfig -o /boot/grub2/grub.cfg
-    when: ansible_distribution_file_variety == "RedHat"
+    when: ansible_os_family == "RedHat"
+
+  - name: Update inferface name in /etc/netplan/00-installer-config.yaml
+    replace:
+      path: /etc/netplan/00-installer-config.yaml
+      regexp: '^\s+{{ansible_default_ipv4.interface}}'
+      replace: '    eth0' 
+    when: ansible_os_family == "Debian"
 
   - name: Reboot host
     reboot:

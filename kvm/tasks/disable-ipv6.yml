@@ -7,11 +7,6 @@
       disable_ipv6: true
   when: ansible_cmdline["ipv6.disable"] is not defined or ansible_cmdline["ipv6.disable"] != "1"
 
-- name: Check 'ipv6.disable=1' param in /etc/default/grub
-  shell: cat /etc/default/grub|egrep ^GRUB_CMDLINE_LINUX|egrep "ipv6.disable=1"
-  register: _check_disable_ipv6
-  ignore_errors: true
-
 - block:
   - name: Get current GRUB_CMDLINE_LINUX settings for RedHat machines
     shell: cat /etc/default/grub|egrep ^GRUB_CMDLINE_LINUX|cut -d'"' -f2

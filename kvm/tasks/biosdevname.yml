@@ -45,14 +45,14 @@
   - name: Update /etc/default/grub with new kernel param for RedHat machines
     lineinfile:
       path: /etc/default/grub
-      regexp: '^GRUB_CMDLINE_LINUX'
+      regexp: '^GRUB_CMDLINE_LINUX='
       line: 'GRUB_CMDLINE_LINUX="{{_new_kernel_param}}"'
     when: ansible_os_family == "RedHat"
 
   - name: Update /etc/default/grub with new kernel param for Debian machines
     lineinfile:
       path: /etc/default/grub
-      regexp: '^GRUB_CMDLINE_LINUX_DEFAULT'
+      regexp: '^GRUB_CMDLINE_LINUX_DEFAULT='
       line: 'GRUB_CMDLINE_LINUX_DEFAULT="{{_new_kernel_param}}"'
     when: ansible_os_family == "RedHat"
 

@@ -75,4 +75,6 @@
     reboot:
       reboot_timeout: 600
       test_command: "uptime"
+
+  - setup:
   when: disable_biosdev| default('false')|bool

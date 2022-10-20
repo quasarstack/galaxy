@@ -44,7 +44,6 @@
     command: grub2-mkconfig -o /boot/grub2/grub.cfg
     when: ansible_distribution_file_variety == "RedHat"
 
-
   - name: Reboot host
     reboot:
       reboot_timeout: 600

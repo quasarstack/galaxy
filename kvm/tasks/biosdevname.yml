@@ -36,11 +36,11 @@
       regexp: '^GRUB_CMDLINE_LINUX'
       line: 'GRUB_CMDLINE_LINUX="{{_new_kernel_param}}"'
 
-  - name: Generate grub config
-    command: grub2-mkconfig -o /boot/grub2/grub.cfg
+  - name: Generate grub config for ubuntu machines
+    command: grub-mkconfig -o /boot/grub/grub.cfg
     when: ansible_distribution == "Ubuntu"
 
-  - name: Generate grub config
+  - name: Generate grub config for RedHat based machines
     command: grub2-mkconfig -o /boot/grub2/grub.cfg
     when: ansible_distribution_file_variety == "RedHat"
 

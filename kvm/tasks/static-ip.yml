@@ -1,7 +1,7 @@
 ---
 
 - name: Get IP with prefix
-  shell: ip a s eth0|egrep "\s+inet\s"|awk '{print $2}'
+  shell: ip a s {{ansible_default_ipv4.interface}}|egrep "\s+inet\s"|awk '{print $2}'
   register: _ip_prefix
 
 - name: Set fact ip_with_prefix

@@ -6,6 +6,6 @@ network:
       dhcp4: false
       addresses:
         - {{ip_with_prefix}}
-			gateway4: {{ansible_default_ipv4.gateway}}
-			nameservers:
-				addresses: [{{ansible_default_ipv4.gateway, 8.8.8.8, 1.1.1.1}}]
+      gateway4: {{ansible_default_ipv4.gateway}}
+      nameservers:
+        addresses: [{{ansible_default_ipv4.gateway, 8.8.8.8, 1.1.1.1}}]

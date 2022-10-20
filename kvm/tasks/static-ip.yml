@@ -15,14 +15,17 @@
     owner: root
     group: root
   when: ansible_os_family == "Debian"
+  register: _static_config
 
 - name: Enable network changes
   command: netplan apply
+  when: _static_config is changed
 
 - name: Reboot host
   reboot:
     reboot_timeout: 600
     test_command: "uptime"
+  when: _static_config is changed
 
 - setup:
 

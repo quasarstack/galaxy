@@ -16,13 +16,14 @@ Supported KVM guests:
 - ubuntu2204(Ubuntu 22.04 LTS)
 
 **Variables:**
-- image_type
-- user_data
+- [image_type](./create-kvm-guest/defaults/main.yml)
+- [user_data](./create-kvm-guest/defaults/main.yml)
 
-Review [default vars](./create-kvm-guest/defaults/main.yml) before running the role and alter the behavior of the role by overwriting ansible variables using extra_vars.
+Review [default vars](./create-kvm-guest/defaults/main.yml) before running the role and alter the behavior of the role by overwriting ansible variables using --extra_vars.
 
 ### Playbook example to create KVM guest
 
+- Create a playbook `kvm-guest-template.yml`
 ```yaml
 ---
 - hosts: localhost
@@ -32,4 +33,9 @@ Review [default vars](./create-kvm-guest/defaults/main.yml) before running the r
     guest_os: ubuntu2204
   roles:
   - role: create-kvm-guest
+```
+
+- Run Playbook
+```bash
+ansible-playbook kvm-guest-template.yml
 ```

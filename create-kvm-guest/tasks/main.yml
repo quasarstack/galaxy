@@ -1,0 +1,114 @@
+---
+
+- name: Run asserts
+  ansible.builtin.assert:
+    that:
+      - guest_os in supported_images
+    fail_msg:
+      - "Review defaults/main.yml for supported guest_os"
+
+- name: Show image input
+  ansible.builtin.debug:
+    msg: 
+     - "Selected Image:"
+     - "{{image_type[guest_os]}}"
+     - "Cloud init input: {{user_data}}"
+
+- name: Review OS information
+  ansible.builtin.pause:
+    echo: yes
+    seconds: 900
+    prompt: "\nINFO: Review above info and continue"
+
+- name: Install guestfs-tools
+  ansible.builtin.package:
+    name: guestfs-tools
+    state: present
+
+- name: Check if /var/lib/libvirt/images/{{image_type[guest_os]['image']}} already exists
+  ansible.builtin.stat:
+    path: "/var/lib/libvirt/images/{{image_type[guest_os]['image']}}"
+  register: _image
+
+- ansible.builtin.debug:
+    msg:
+      - "Matching image already exists: {{image_type[guest_os]['local_path']}}/{{image_type[guest_os]['image']}}"
+      - "Image download will be skipped"
+  when: _image.stat.exists
+
+- name: Set fact image_download=true
+  ansible.builtin.set_fact:
+    image_download: true
+  when: not _image.stat.exists
+
+- name: Download {{guest_os}} image {{image_type[guest_os]['version']}} -> {{image_type[guest_os]['source']}}
+  ansible.builtin.get_url:
+    url: "{{image_type[guest_os]['source']}}"
+    dest: "{{image_type[guest_os]['local_path']}}/"
+    mode: 0644
+    owner: root
+    group: root
+  when: image_download|bool
+
+- name: Set root password of the image
+  ansible.builtin.command: virt-customize -a {{image_type[guest_os]['local_path']}}/{{image_type[guest_os]['image']}} --root-password password:{{image_type[guest_os]['password']}}
+  when: image_download|bool
+
+#- name: Copy user-data to /var/tmp
+#  ansible.builtin.copy:
+#    src: user-data
+#    dest: /var/tmp/
+#    mode: 0644
+#    owner: root
+#    group: root
+
+- name: Block to delete existing template
+  block:
+  - name: Check if {{image_type[guest_os]['template_name']}} state
+    ansible.builtin.command: virsh domstate {{image_type[guest_os]['template_name']}}
+    register: _domstate
+    ignore_errors: true
+  
+  - name: Shutdown {{image_type[guest_os]['template_name']}}
+    ansible.builtin.shell: |
+        virsh shutdown {{image_type[guest_os]['template_name']}}
+        sleep 10
+    when: 
+      - _domstate.rc == 0
+      - _domstate.stdout is match('running')
+  
+  - name: Delete existing {{image_type[guest_os]['template_name']}} VM, not disk
+    ansible.builtin.command: virsh undefine {{image_type[guest_os]['template_name']}}
+    when: 
+      - _domstate.rc == 0
+  when: cleanup|bool
+
+- name: Create Guest VM template {{image_type[guest_os]['template_name']}}
+  ansible.builtin.shell: |
+      virt-install --name {{image_type[guest_os]['template_name']}} \
+      --memory 4096 \
+      --vcpu 2 --cpu host \
+      --boot hd \
+      --disk {{image_type[guest_os]['local_path']}}/{{image_type[guest_os]['image']}} \
+      --import \
+      --network {{guest_network}} \
+      --cloud-init user-data={{user_data}} \
+      --os-variant {{image_type[guest_os]['os_variant']}} \
+      --noautoconsole
+  
+- ansible.builtin.pause:
+    echo: yes
+    prompt: "\nINFO: Machine is booting up, wait for 2 mins"
+    minutes: 2
+
+- name: Get {{image_type[guest_os]['template_name']}} IP
+  ansible.builtin.command: virsh domifaddr {{image_type[guest_os]['template_name']}}
+  register: _guest_ip
+  until: _guest_ip.rc == 0
+  retries: 6
+  delay: 20
+
+- ansible.builtin.debug:
+    msg:
+      - "{{image_type[guest_os]['template_name']}} IP:"
+      - "{{_guest_ip.stdout_lines}}"

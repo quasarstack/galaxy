@@ -1,0 +1,9 @@
+---
+- hosts: localhost
+  gather_facts: true
+  become: yes
+  vars:
+    guest_os: ubuntu2204
+  roles:
+  - role: create-kvm-guest
+

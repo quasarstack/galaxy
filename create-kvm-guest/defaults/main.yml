@@ -1,0 +1,29 @@
+# `guest_os` input will be validated against `supported_images` list
+supported_images:
+  - ubuntu2204
+
+# Default network for Overwrite using 
+# Run 'virsh net-list' to list networks
+guest_network: default
+
+# Run 'virt-install --os-variant list' to list supported os variants on KVM host 
+image_type:
+  ubuntu2204:
+    source: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img"
+    image: jammy-server-cloudimg-amd64.img
+    user: root
+    password: redhat
+    version: '22.04'
+    local_path: /var/lib/libvirt/images
+    template_name: ubuntu2204-vm-template
+    os_variant: 'ubuntu22.04'
+    network: "{{guest_network}}"
+
+# ansible will check if image exists or not in local_path
+# if image exists, download will be skipped, else image will be downloaded
+# For a fixed behavior, set `image_download` value using extra_vars
+image_download: false
+
+cleanup: true
+
+user_data: "{{role_path}}/files/user-data"

@@ -17,9 +17,24 @@ Supported KVM guests:
 
 **Variables:**
 - [image_type](./create-kvm-guest/defaults/main.yml)
+    - Set image source
+    - Version
+    - Destination directory
+    - Guest Template Name
+    - CPU
+    - Memory
 - [user_data](./create-kvm-guest/defaults/main.yml)
+    Default [user-data](./create-kvm-guest/files/user-data) file. Cloud-init file to set:
+    - Hostname
+    - User and password
+    - SSH config
+    - SSH Auth Keys
 
-Review [default vars](./create-kvm-guest/defaults/main.yml) before running the role and alter the behavior of the role by overwriting ansible variables using --extra_vars.
+- [image_download](./create-kvm-guest/defaults/main.yml)
+    - Default is False. Image download will be skipped if already exists
+    - Using `-e image_download=true` to force image download
+
+Review [default vars](./create-kvm-guest/defaults/main.yml) before running the role and alter the behavior of the role by overwriting ansible variables using -e.
 
 ### Playbook example to create KVM guest
 
@@ -38,4 +53,9 @@ Review [default vars](./create-kvm-guest/defaults/main.yml) before running the r
 - Run Playbook
 ```bash
 ansible-playbook kvm-guest-template.yml
+```
+
+- Run Playbook with custom user_data
+```bash
+ansible-playbook kvm-guest-template.yml -e user_data='full path of user-data file on KVM host'
 ```

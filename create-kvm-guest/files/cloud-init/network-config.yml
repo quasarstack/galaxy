@@ -1,0 +1,7 @@
+network:
+  version: 2
+  ethernets:
+    # opaque ID for physical interfaces, only referred to by other stanzas
+    id0:
+      dhcp4: true
+      dhcp-identifier: mac

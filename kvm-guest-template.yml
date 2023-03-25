@@ -7,3 +7,9 @@
   roles:
   - role: create-kvm-guest
 
+- hosts: kvm_guest
+  gather_facts: true
+  
+  tasks:
+  - setup:
+

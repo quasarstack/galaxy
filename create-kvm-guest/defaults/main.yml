@@ -18,6 +18,8 @@ image_type:
     template_name: ubuntu2204-vm-template
     os_variant: 'ubuntu22.04'
     network: "{{guest_network}}"
+    cpu: 2
+    memory: 4096
 
 # ansible will check if image exists or not in local_path
 # if image exists, download will be skipped, else image will be downloaded
@@ -26,4 +28,5 @@ image_download: false
 
 cleanup: true
 
-user_data: "{{role_path}}/files/user-data"
+user_data: "{{role_path}}/files/cloud-init/user-data.yml"
+network_config: "{{role_path}}/files/cloud-init/network-config.yml"

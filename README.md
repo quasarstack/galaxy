@@ -2,7 +2,9 @@
 ***
 - [Overview](#overview)
 - [Create KVM Guest](#create-kvm-guest)
-  - [Usage]()
+  - [Reinstall Grub in Image](#reinstall-grub-in-image)
+- [Tweak KVM Guest](#tweak-kvm-guest)
+  - [Enable Serial Console](#enable-serial-console)
 
 ## Overview
 ***
@@ -23,6 +25,7 @@ Supported KVM guests:
     - Guest Template Name
     - CPU
     - Memory
+    - Disk Size (default 20G, change based on your requirment)
 - [user_data](./create-kvm-guest/defaults/main.yml)
     Default [user-data](./create-kvm-guest/files/user-data) file. Cloud-init file to set:
     - Hostname
@@ -36,7 +39,7 @@ Supported KVM guests:
 
 Review [default vars](./create-kvm-guest/defaults/main.yml) before running the role and alter the behavior of the role by overwriting ansible variables using -e.
 
-### Playbook example to create KVM guest
+### Implementation
 
 - Create a playbook `kvm-guest-template.yml`
 ```yaml
@@ -59,3 +62,30 @@ ansible-playbook kvm-guest-template.yml
 ```bash
 ansible-playbook kvm-guest-template.yml -e user_data='full path of user-data file on KVM host'
 ```
+
+**NOTE:** 
+  - Playbook will pause for 30 minutes and ask to reinstall grub in the image.
+  - Follow [Reinstall Grub in Image](#reinstall-grub-in-image) to reinstall grub in image
+  - Post reinstall grub, continue playbook with Ctrl + C , and C
+
+### Reinstall Grub in Image
+```bash
+cd /var/lib/libvirtd/images
+
+virt-rescue "Guest VM Disk"
+
+mount /dev/sda3 /mnt
+mount --bind /dev /mnt/dev
+mount --bind /proc /mnt/proc
+mount --bind /sys /mnt/sys
+chroot /mnt
+grub-install /dev/sda
+
+Ctrl + d -> to exit from rescue mode
+```
+
+## Tweak KVM Guest
+***
+### Enable Serial Console
+
+

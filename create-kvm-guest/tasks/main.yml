@@ -26,72 +26,107 @@
     seconds: 900
     prompt: "\nINFO: Review above info and continue"
 
-- name: Block to delete existing template
-  block:
-  - name: Check if {{image_type[guest_os]['template_name']}} state
-    ansible.builtin.command: virsh domstate {{image_type[guest_os]['template_name']}}
-    register: _domstate
-    ignore_errors: true
-  
-  - name: Shutdown {{image_type[guest_os]['template_name']}}
-    ansible.builtin.shell: |
-        virsh shutdown {{image_type[guest_os]['template_name']}}
-        sleep 10
-    when: 
-      - _domstate.rc == 0
-      - _domstate.stdout is match('running')
-  
-  - name: Delete existing {{image_type[guest_os]['template_name']}} VM, not disk
-    ansible.builtin.command: virsh undefine {{image_type[guest_os]['template_name']}}
-    when: 
-      - _domstate.rc == 0
-  when: cleanup|bool
+- name: Install additional packages to manage qcow2 images
+  ansible.builtin.package:
+    name:
+      - libguestfs-rescue
+      - guestfs-tools
+    state: latest
 
+###### Block to manage pulic image ##################
 - name: Check if /var/lib/libvirt/images/{{image_type[guest_os]['image']}} already exists
   ansible.builtin.stat:
     path: "/var/lib/libvirt/images/{{image_type[guest_os]['image']}}"
   register: _image
 
-- name: Run block when image_download=false
-  block:
-  - ansible.builtin.debug:
-      msg:
-        - "Matching image already exists: {{image_type[guest_os]['local_path']}}/{{image_type[guest_os]['image']}}"
-        - "Image download will be skipped"
-    when: _image.stat.exists
-    
-  - name: Set fact image_download=true if image does not exists
-    ansible.builtin.set_fact:
-      image_download: true
-    when: not _image.stat.exists
-  when: not image_download|bool
+- ansible.builtin.debug:
+    msg:
+      - "Matching image already exists: {{image_type[guest_os]['local_path']}}/{{image_type[guest_os]['image']}}"
+      - "Image download will be skipped"
+  when: _image.stat.exists and not image_download|bool
 
-- name: Run block when image_download=true
-  block:
-  - name: Remove existing image
-    ansible.builtin.file:
-      path: "{{image_type[guest_os]['local_path']}}/{{image_type[guest_os]['image']}}"
-      state: absent
-    when: _image.stat.exists
-  
-  - name: Download {{guest_os}} image {{image_type[guest_os]['version']}} -> {{image_type[guest_os]['source']}}
-    ansible.builtin.get_url:
-      url: "{{image_type[guest_os]['source']}}"
-      dest: "{{image_type[guest_os]['local_path']}}/"
-      mode: 0644
-      owner: root
-      group: root
+- name: Force remove of existing image "{{image_type[guest_os]['local_path']}}/{{image_type[guest_os]['image']}}"
+  ansible.builtin.file:
+    path: "{{image_type[guest_os]['local_path']}}/{{image_type[guest_os]['image']}}"
+    state: absent
+  when: _image.stat.exists and image_download|bool
+
+- name: Set fact image_download=true if image does not exists
+  ansible.builtin.set_fact:
+    image_download: true
+  when: not _image.stat.exists
+
+- name: Download {{guest_os}} image {{image_type[guest_os]['version']}} -> {{image_type[guest_os]['source']}}
+  ansible.builtin.get_url:
+    url: "{{image_type[guest_os]['source']}}"
+    dest: "{{image_type[guest_os]['local_path']}}/"
+    mode: 0644
+    owner: root
+    group: root
   when: image_download|bool
 
-- name: Create Guest VM template {{image_type[guest_os]['template_name']}}
-  ansible.builtin.shell: |
-      virt-install --name {{image_type[guest_os]['template_name']}} \
-      --memory {{image_type[guest_os]['memory']}} \
-      --vcpu {{image_type[guest_os]['cpu']}} --cpu host \
+########## Block to do template cleanup #####################
+- name: Block to delete existing template
+  block:
+  - name: Check if {{image_type[guest_os]['template']['name']}} state
+    ansible.builtin.command: virsh domstate {{image_type[guest_os]['template']['name']}}
+    register: _domstate
+    ignore_errors: true
+  
+  - name: Shutdown {{image_type[guest_os]['template']['name']}}
+    ansible.builtin.shell: |
+        virsh shutdown {{image_type[guest_os]['template']['name']}}
+        sleep 10
+    when: 
+      - _domstate.rc == 0
+      - _domstate.stdout is match('running')
+  
+  - name: Delete existing {{image_type[guest_os]['template']['name']}} VM with storage
+    ansible.builtin.command: virsh undefine {{image_type[guest_os]['template']['name']}} --remove-all-storage
+    when: 
+      - _domstate.rc == 0
+  when: cleanup|bool  
+
+- name: Setup virtual disk and create VM
+  block:
+  ########## Block to create new storage disk for template VM #######
+  - name: Create vDisk {{image_type[guest_os]['template']['disk']}}
+    ansible.builtin.shell: |
+      [ -f {{image_type[guest_os]['template']['disk']}} ] && rm {{image_type[guest_os]['template']['disk']}}
+      
+      qemu-img create -f qcow2 -o preallocation=metadata \
+        {{image_type[guest_os]['template']['disk']}} {{image_type[guest_os]['template']['size']}}
+    args:
+      chdir: "{{image_type[guest_os]['local_path']}}"
+
+  # In below talk, downloaded image content will be copied to new image
+  # and rootfs file system will be increased 
+  - name: Copy and resize rootfs from original image to {{image_type[guest_os]['template']['disk']}}
+    ansible.builtin.command: |
+      virt-resize --expand /dev/sda1 \
+        {{image_type[guest_os]['image']}} {{image_type[guest_os]['template']['disk']}}
+    args:
+      chdir: "{{image_type[guest_os]['local_path']}}"
+
+  # Automate below task
+  - name: Manual step to fix resized image
+    ansible.builtin.pause:
+      echo: yes
+      minutes: 30
+      prompt: "\nIn README.md, follow [Reinstall Grub in Image] \n
+        to reinstall grub in image: {{image_type[guest_os]['template']['disk']}} \n
+        and then continue this playbook"
+
+  ########## Block to Create Guest template ##############
+  - name: Create Guest VM template {{image_type[guest_os]['template']['name']}}
+    ansible.builtin.shell: |
+      virt-install --name {{image_type[guest_os]['template']['name']}} \
+      --memory {{image_type[guest_os]['template']['memory']}} \
+      --vcpu {{image_type[guest_os]['template']['cpu']}} --cpu host \
       --boot hd \
-      --disk {{image_type[guest_os]['local_path']}}/{{image_type[guest_os]['image']}} \
+      --disk {{image_type[guest_os]['local_path']}}/{{image_type[guest_os]['template']['disk']}} \
       --import \
-      --network {{guest_network}} \
+      --network {{image_type[guest_os]['template']['network']}} \
       --cloud-init user-data={{user_data}} \
       --os-variant {{image_type[guest_os]['os_variant']}} \
       --noautoconsole
@@ -103,8 +138,8 @@
     minutes: 2
   when: cleanup|bool
 
-- name: Get {{image_type[guest_os]['template_name']}} IP
-  ansible.builtin.command: virsh domifaddr {{image_type[guest_os]['template_name']}}
+- name: Get {{image_type[guest_os]['template']['name']}} IP
+  ansible.builtin.command: virsh domifaddr {{image_type[guest_os]['template']['name']}}
   register: _guest_eth
   until: _guest_eth.rc == 0
   retries: 6
@@ -112,16 +147,16 @@
 
 - ansible.builtin.debug:
     msg:
-      - "{{image_type[guest_os]['template_name']}} Interface:"
+      - "{{image_type[guest_os]['template']['name']}} Interface:"
       - "{{_guest_eth.stdout_lines}}"
 
-- name: Filter out KVM guest IP
-  ansible.builtin.shell: virsh domifaddr {{image_type[guest_os]['template_name']}}| awk '/vnet/{print $4}'|cut -d'/' -f1
-  register: _ip
+#- name: Filter out KVM guest IP
+#  ansible.builtin.shell: virsh domifaddr {{image_type[guest_os]['template']['name']}}| awk '/vnet/{print $4}'|cut -d'/' -f1
+#  register: _ip
 
-- name: Add Created host in kvm_guest group
-  ansible.builtin.add_host:
-    name: "{{_ip.stdout}}"
-    groups: kvm_guest
-    ansible_user: "{{lookup('env', 'kvm_guest_user')}}"
-    ansible_password: "{{lookup('env', 'kvm_guest_password')}}" 
+#- name: Add Created host in kvm_guest group
+#  ansible.builtin.add_host:
+#    name: "{{_ip.stdout}}"
+#    groups: kvm_guest
+#    ansible_user: "{{lookup('env', 'kvm_guest_user')}}"
+#    ansible_password: "{{lookup('env', 'kvm_guest_password')}}"

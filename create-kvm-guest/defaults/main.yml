@@ -15,11 +15,15 @@ image_type:
     password: redhat
     version: '22.04'
     local_path: /var/lib/libvirt/images
-    template_name: ubuntu2204-vm-template
     os_variant: 'ubuntu22.04'
-    network: "{{guest_network}}"
-    cpu: 2
-    memory: 4096
+    template:
+      name: ubuntu2204-vm-template
+      network: "{{guest_network}}"
+      cpu: 2
+      memory: 4096
+      disk: ubuntu2204-vm-template.img
+      size: 20G
+    
 
 # ansible will check if image exists or not in local_path
 # if image exists, download will be skipped, else image will be downloaded

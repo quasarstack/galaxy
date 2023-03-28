@@ -7,6 +7,24 @@
     fail_msg:
       - "Review defaults/main.yml for supported guest_os"
 
+- name: Block to check for custom guest config input
+  block:
+  - name: Check for custom_guest_input
+    ansible.builtin.stat:
+      path: "{{custom_guest_input}}"
+    register: _custom_guest
+  
+  - ansible.builtin.fail:
+      msg:
+        - "You have provide custom_guest_input={{custom_guest_input}} using extra vars"
+        - "But failed to find {{custom_guest_input}} on localhost"
+    when: not _custom_guest.stat.exists
+
+  - name: Include vars from {{custom_guest_input}}
+    ansible.builtin.include_vars:
+      file: "{{custom_guest_input}}"
+  when: custom_guest_input is defined
+
 - name: Show image input
   ansible.builtin.debug:
     msg: 
@@ -150,13 +168,13 @@
       - "{{image_type[guest_os]['template']['name']}} Interface:"
       - "{{_guest_eth.stdout_lines}}"
 
-#- name: Filter out KVM guest IP
-#  ansible.builtin.shell: virsh domifaddr {{image_type[guest_os]['template']['name']}}| awk '/vnet/{print $4}'|cut -d'/' -f1
-#  register: _ip
+- name: Filter out KVM guest IP
+  ansible.builtin.shell: virsh domifaddr {{image_type[guest_os]['template']['name']}}| awk '/vnet/{print $4}'|cut -d'/' -f1
+  register: _ip
 
-#- name: Add Created host in kvm_guest group
-#  ansible.builtin.add_host:
-#    name: "{{_ip.stdout}}"
-#    groups: kvm_guest
-#    ansible_user: "{{lookup('env', 'kvm_guest_user')}}"
-#    ansible_password: "{{lookup('env', 'kvm_guest_password')}}"
+- name: Add Created host in new_kvm_guest group
+  ansible.builtin.add_host:
+    name: "{{_ip.stdout}}"
+    groups: new_kvm_guest
+    ansible_user: "{{lookup('env', 'kvm_guest_user')}}"
+    ansible_password: "{{lookup('env', 'kvm_guest_password')}}"

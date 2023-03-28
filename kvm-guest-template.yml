@@ -7,9 +7,59 @@
   roles:
   - role: create-kvm-guest
 
-- hosts: kvm_guest
-  gather_facts: true
-  
-  tasks:
-  - setup:
+- hosts: new_kvm_guest
+  gather_facts: false
+  become: true
 
+  vars:
+    guest_os: ubuntu2204
+  
+  pre_tasks:
+  - ansible.builtin.assert:
+      that:
+        - lookup('env', 'kvm_guest_user') != ""
+        - lookup('env', 'kvm_guest_password') != ""
+      fail_msg:
+        - "kvm_guest_user and kvm_guest_password env var must be exported to authenticate new create KVM VM"
+        - "export kvm_guest_user=xxx"
+        - "export kvm_guest_password=xxx"
+  
+  - ansible.builtin.setup:
+  
+  - name: Include vars from {{custom_guest_input}}
+    ansible.builtin.include_vars:
+      file: "{{custom_guest_input}}"
+    when: custom_guest_input is defined
+
+  - name: Include default vars from create-kvm-guest
+    ansible.builtin.include_vars:
+      file: create-kvm-guest/defaults/main.yml
+    when: custom_guest_input is not defined
+
+  tasks:
+  - name: Include tweak-kvm-guest role ro setup vconsole
+    ansible.builtin.include_role:
+      name: tweak-kvm-guest
+      tasks_from: vconsole.yml
+
+  - name: Include os-tuing role to set static IP in VM
+    ansible.builtin.include_role:
+      name: os-tuning
+      tasks_from: static-ip.yml
+
+  - name: Reboot host 
+    ansible.builtin.shell: |
+      virsh reboot {{image_type[guest_os]['template']['name']}}
+      sleep 10
+      if ! virsh domstate  {{image_type[guest_os]['template']['name']}}|egrep "running"; then
+        virsh start {{image_type[guest_os]['template']['name']}}
+      fi
+    delegate_to: localhost
+
+  - ansible.builtin.pause:
+      echo: yes
+      prompt: "\nINFO: Machine is rebooting, wait for 2 mins"
+      minutes: 2
+    delegate_to: localhost
+
+  

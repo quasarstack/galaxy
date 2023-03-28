@@ -50,9 +50,9 @@
   - name: Generate grub config for RedHat based machines
     command: grub2-mkconfig -o /boot/grub2/grub.cfg
     when: ansible_os_family == "RedHat"
-
-  - name: Reboot host
-    reboot:
-      reboot_timeout: 600
-      test_command: "uptime"
+  
+  #- name: Reboot host
+  #  reboot:
+  #    reboot_timeout: 600
+  #    test_command: "uptime"
   when: _check_console_param.rc != 0

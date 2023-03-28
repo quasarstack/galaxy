@@ -11,7 +11,7 @@
 - name: Template out config for ubuntu machine
   template:
     src: ubuntu-netplan.j2
-    dest: /etc/netplan/00-installer-config.yaml
+    dest: /etc/netplan/50-cloud-init.yaml
     owner: root
     group: root
   when: ansible_os_family == "Debian"
@@ -21,11 +21,11 @@
   command: netplan apply
   when: _static_config is changed
 
-- name: Reboot host
-  reboot:
-    reboot_timeout: 600
-    test_command: "uptime"
-  when: _static_config is changed
+#- name: Reboot host
+#  reboot:
+#    reboot_timeout: 600
+#    test_command: "uptime"
+#when: _static_config is changed
 
 - setup:
 

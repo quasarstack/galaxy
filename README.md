@@ -41,6 +41,12 @@ Review [default vars](./create-kvm-guest/defaults/main.yml) before running the r
 
 ### Implementation
 
+- Export username/password of VM, make sure this matches in [user-data](./create-kvm-guest/files/cloud-init/user-data.yml)
+```bash
+export kvm_guest_user=ubuntu
+export kvm_guest_password=redhat123
+```
+
 - Create a playbook `kvm-guest-template.yml`
 ```yaml
 ---

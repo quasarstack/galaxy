@@ -1,0 +1,47 @@
+---
+
+- name: Set fact net_list
+  ansible.builtin.set_fact:
+    net_list: []
+
+- name: Append kvm_networks name in net_list
+  ansible.builtin.set_fact:
+    net_list: "{{ net_list + [item.name] }}"
+  with_items: "{{kvm_networks}}"
+
+- name: Run Asserts
+  ansible.builtin.assert:
+    that:
+      - net_name is defined and net_name in net_list
+      - operation is defined and operation in operations
+    fail_msg:
+      - "You must provide net_name extra_var, -e net_name='br-vxlan'"
+      - "net_name value must match a network name from from kvm_networks list"
+      - "'operation' must be defined and 'operation' value would be in 'opetrations'"
+      - "Review defaults/main.yml"
+
+# _knet.ansible_facts.ansible_libvirt_networks will store all kvm virtual networks after running this task.
+- name: Get KVM Network facts
+  community.libvirt.virt_net:
+    command: facts
+  register: _knet
+
+- name: Include create.yml
+  ansible.builtin.include_tasks: create.yml
+  with_items: "{{kvm_networks}}"
+  loop_control:
+    loop_var: network
+  when: 
+    - network.name is match(net_name)
+    - operation is match('create')
+
+- name: Include destroy.yml
+  ansible.builtin.include_tasks: destroy.yml
+  with_items: "{{kvm_networks}}"
+  loop_control:
+    loop_var: network
+  when: 
+    - network.name is match(net_name)
+    - operation is match('delete')
+  
+  

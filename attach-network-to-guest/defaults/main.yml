@@ -1,0 +1,10 @@
+---
+# KVM guest to which you want to attach a network
+#guest_name: ""
+
+# List of KVM networks you want to attach to guest
+#net_list:
+#  - A
+#  - B
+
+network_exists: true

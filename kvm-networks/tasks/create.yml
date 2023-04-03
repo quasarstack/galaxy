@@ -1,0 +1,37 @@
+---
+
+- ansible.builtin.debug:
+    var: network
+
+- name: Do cleanup before creating network
+  ansible.builtin.include_tasks: destroy.yml
+  when: 
+    - network.name in _knet.ansible_facts.ansible_libvirt_networks
+    - cleanup|bool
+
+- block:
+  - ansible.builtin.debug:
+      msg: 
+        - "You have disabled network cleanup if already exists. Stopping playbook"
+  - name: Stop if network already exists and cleanup is false
+    ansible.builtin.meta: end_play
+  when: 
+    - network.name in _knet.ansible_facts.ansible_libvirt_networks
+    - not cleanup|bool
+
+- name: Define KVM Virtual Network
+  community.libvirt.virt_net:
+    command: define
+    name: "{{network.name}}"
+    xml: "{{lookup('template', 'kvm-net.j2')}}"
+  
+- name: Create(Start) KVM Virtual Network
+  community.libvirt.virt_net:
+    command: start
+    state: active
+    name: "{{network.name}}"
+
+- name: Autostart KVM Network
+  community.libvirt.virt_net:
+    autostart: true
+    name: "{{network.name}}"

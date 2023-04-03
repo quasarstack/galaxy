@@ -1,0 +1,26 @@
+# create(default) -> Create virtual network
+# delete -> delete virtual network
+operations: 
+  - create
+  - delete
+
+# type is not defined or null, means isolated network
+kvm_networks:
+  - name: br-mgmt
+    cidr: 192.168.50.0/24
+    address: 192.168.50.1
+    netmask: 255.255.255.0
+    start: 192.168.50.2
+    end: 192.168.50.254
+    type: nat
+  - name: br-vxlan
+    cidr: 192.168.60.0/24
+    address: 192.168.60.1
+    netmask: 255.255.255.0
+    start: 192.168.60.2
+    end: 192.168.60.254
+
+# Do cleanup before creating network is exists
+cleanup: true
+
+#net_name: ""

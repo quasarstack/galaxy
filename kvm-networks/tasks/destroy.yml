@@ -1,0 +1,22 @@
+---
+
+- ansible.builtin.debug:
+    var: network
+
+- block:
+  - ansible.builtin.debug:
+      msg: "{{network.name}} does not exists. Stopping playbook"
+  
+  - ansible.builtin.meta: end_play
+  when: network.name not in _knet.ansible_facts.ansible_libvirt_networks
+
+- name: Destroy KVM Virtual Network
+  community.libvirt.virt_net:
+    command: destroy
+    name: "{{network.name}}"
+  
+- name: Undefine KVM Virtual Network
+  community.libvirt.virt_net:
+    command: undefine
+    name: "{{network.name}}"
+  

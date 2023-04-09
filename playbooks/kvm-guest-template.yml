@@ -21,7 +21,7 @@
   vars:
     guest_os: ubuntu2204
     host_reboot: false
-    guest_default_vars: "{{lookup('env','PWD')}}/kvm-guest-template/defaults/main.yml"
+    template_default_vars: "{{lookup('env','PWD')}}/kvm-guest-template/defaults/main.yml"
   
   pre_tasks:
   - name: Include vars from file provided in custom_guest_input extra var
@@ -31,7 +31,7 @@
 
   - name: Include default vars from kvm-guest-template
     ansible.builtin.include_vars:
-      file: "{{guest_default_vars_file}}"
+      file: "{{template_default_vars}}"
     when: custom_guest_input is not defined
 
   tasks:    

@@ -40,6 +40,15 @@ Supported KVM guests:
 - `kvm_guest_user` and `kvm_guest_password` are used to authenticate guest template and make changes in OS. By default these vars set from `chpasswd` provided in user data cloud init.
 
 - Run Playbook
+Along with creating guest template, playbook with make following changes in guest template:
+
+```
+- Enable Serial Console
+- Disable vIP6
+- Disable Biosdevname
+- Set dhcp network config with dhcp-identifier=mac -> Only for Ubuntu
+```
+
 ```bash
 ansible-playbook playbooks/kvm-guest-template.yml
 ```

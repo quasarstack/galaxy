@@ -59,14 +59,9 @@
       name: os-tuning
       tasks_from: dhcp-identifier.yml
 
-  - name: Reboot host 
+  - name: Shutdown {{image_type[guest_os]['template']['name']}} 
     ansible.builtin.shell: |
       virsh shutdown {{image_type[guest_os]['template']['name']}}
       [ $? != 0 ] && echo "Failed to shutdown VM" && exit 1
       sleep 10
-      virsh start {{image_type[guest_os]['template']['name']}}
-      sleep 30
-    args:
-      executable: /bin/bash
-    delegate_to: localhost
-    when: host_reboot|bool
+    delegate_to: localhost 

@@ -52,14 +52,14 @@
     done
   when: shut_guest is defined and shut_guest|bool
 
-- name: Setting {{guest.name}} cpu
+- name: Setting {{guest.name}} cpu count to {{guest.cpu}}
   ansible.builtin.shell: |
     virsh setvcpus --domain {{guest.name}} \
       --count {{guest.cpu}} \
       --maximum --config
   when: _cpu_count.stdout|int != guest.cpu
 
-- name: Setting {{guest.name}} memory
+- name: Setting {{guest.name}} memory to {{guest.memory}} KB
   ansible.builtin.shell: |
     virsh setmem --domain {{guest.name}} \
       --size {{guest.memory}} --config

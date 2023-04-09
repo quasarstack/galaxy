@@ -2,13 +2,13 @@
 
 - ansible.builtin.debug:
     msg: 
-      - "Attaching interfaces to guest:"
+      - "Running interfaces attach code for guest:"
       - "{{guest}}"
 
 - ansible.builtin.debug:
     msg: 
       - "Skipping operation for {{guest.name}}. guest.networks is not defined"
-  when: guest.networks is not defined or guest.networks == ""
+  when: guest.networks is not defined or guest.networks == "" or guest.networks == None
 
 - block:
   - name: Get current interfaces list
@@ -96,4 +96,6 @@
           --model virtio
       with_items: "{{guest.networks}}"
     when: attach_interfaces is match('true')
-  when: guest.networks is defined and guest.networks != ""
+  when: 
+    - guest.networks is defined
+    - guest.networks != "" or guest.networks != None

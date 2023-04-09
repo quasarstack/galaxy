@@ -56,7 +56,7 @@
   ansible.builtin.shell: |
     virsh setvcpus --domain {{guest.name}} \
       --count {{guest.cpu}} \
-      --maximum --config --live
+      --maximum --current
   when: _cpu_count.stdout|int != guest.cpu
 
 - name: Setting {{guest.name}} memory to {{guest.memory}} KB

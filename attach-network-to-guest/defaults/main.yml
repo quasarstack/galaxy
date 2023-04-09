@@ -13,6 +13,9 @@ kvm_deployment:
     - br-vxlan 
   virtual_machines:
     - name: ubuntu2204
+      networks:
+        - br-mgmt
+        - br-vxlan
 
 
   

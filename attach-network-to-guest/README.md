@@ -31,6 +31,9 @@ Networks will be attached to VM in the specified order. If guest machine already
         - br-vxlan 
       virtual_machines:
         - name: ubuntu2204
+          networks: # Update below list to attach interface of the networks
+            - br-mgmt
+            - br-vxlan
   roles:
   - role: attach-network-to-guest
 

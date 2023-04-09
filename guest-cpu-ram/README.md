@@ -31,6 +31,8 @@ ansible-galaxy collection install community.libvirt
         - name: ubuntu2204
           cpu: 1
           memory: 1024 # in KB
+          networks: # this var wont be used in role
+            - br-mgmt
   roles:
   - role: guest-cpu-ram
 

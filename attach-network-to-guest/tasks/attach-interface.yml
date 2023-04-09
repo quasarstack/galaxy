@@ -98,4 +98,5 @@
     when: attach_interfaces is match('true')
   when: 
     - guest.networks is defined
-    - guest.networks != "" or guest.networks != None
+    - guest.networks != ""
+    - guest.networks != None

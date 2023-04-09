@@ -7,7 +7,7 @@
 
 - ansible.builtin.debug:
     msg: 
-      - "Skipping operation for {{guest.name}}. guest.networks is not defined"
+      - "Skipping operation for {{guest.name}}. 'guest.networks' is not defined or null"
   when: guest.networks is not defined or guest.networks == "" or guest.networks == None
 
 - block:
@@ -57,11 +57,10 @@
   - name: CONTINUE interfaces attachment as machine has no other network than default
     ansible.builtin.debug:
       msg: "CONTINUE to attach network interfaces"
-    when: attach_interfaces is match('true')
+    when: attach_interfaces|bool
   
   - name: STOP interfaces attachment as machine has unknown networks
-    ansible.builtin.debug:
-      fail:
+    ansible.builtin.fail:
         - "STOP interfaces attachment"
         - "Either one of the network from {{guest.networks}} already attached to {{guest.name}}"
         - "Or Machine has some unknown network"
@@ -71,7 +70,7 @@
         - "Disable this role in playbook if you think machines already have networks attached in right order "
         - "You can manually delete additional network re-run the playbook"
         - "Review README for information to handle this scenario"
-    when: attach_interfaces is match('false')
+    when: not attach_interfaces|bool
 
   - block:  
     - name: Shutdown {{guest.name}} guest machine
@@ -95,7 +94,7 @@
           --source {{item}} \
           --model virtio
       with_items: "{{guest.networks}}"
-    when: attach_interfaces is match('true')
+    when: attach_interfaces|bool
   when: 
     - guest.networks is defined
     - guest.networks != ""

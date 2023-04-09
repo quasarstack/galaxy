@@ -11,7 +11,7 @@
   when: guest.networks is not defined or guest.networks == "" or guest.networks == None
 
 - block:
-  - name: Get current interfaces list
+  - name: attach-network-to-guest | Get current interfaces list
     ansible.builtin.shell: virsh domiflist {{guest.name}}
     register: _iflist
 
@@ -22,24 +22,24 @@
         - "Network order defined in vars:"
         - "{{guest.networks}}"
 
-  - name: Run code to ensure VM has only one default network or matching given networks list
+  - name: attach-network-to-guest | Run code to ensure VM has only one default network or matching given networks list
     ansible.builtin.shell: virsh domiflist {{guest.name}}|egrep "\s-\s+"|awk 'FNR != 1 {print $3}'
     register: _net_stat
 
   - ansible.builtin.debug:
       var: _net_stat.stdout_lines
   
-  - name: Set fact attach_interfaces=skip when network order is matching
+  - name: attach-network-to-guest | Set fact attach_interfaces=skip when network order is matching
     ansible.builtin.set_fact:
       attach_interfaces: skip
     when: _net_stat.stdout_lines == guest.networks
 
-  - name: Set fact attach_interfaces=true when machine does not have any other network than default
+  - name: attach-network-to-guest | Set fact attach_interfaces=true when machine does not have any other network than default
     ansible.builtin.set_fact:
       attach_interfaces: true
     when: _net_stat.stdout == ""
 
-  - name: Set fact attach_interfaces=false when machine has unknown networks
+  - name: attach-network-to-guest | Set fact attach_interfaces=false when machine has unknown networks
     ansible.builtin.set_fact:
       attach_interfaces: false
     when: 
@@ -49,7 +49,7 @@
   - ansible.builtin.debug:
       var: attach_interfaces
     
-  - name: Run assert for attach_interfaces
+  - name: attach-network-to-guest | Run assert for attach_interfaces
     ansible.builtin.assert:
       that: 
         - attach_interfaces is match('skip') or attach_interfaces|bool
@@ -68,7 +68,7 @@
         - "Review README for information to handle this scenario"
 
   - block:  
-    - name: Shutdown {{guest.name}} guest machine
+    - name: attach-network-to-guest | Shutdown {{guest.name}} guest machine
       ansible.builtin.shell: |
         while true;do
           if virsh domstate {{guest.name}}|egrep "running";then
@@ -82,7 +82,7 @@
           fi
         done
 
-    - name: Attach interface to {{guest.name}}
+    - name: attach-network-to-guest | Attach interface to {{guest.name}}
       ansible.builtin.shell: |
         virsh attach-interface --domain {{guest.name}} --config \
           --type network \

@@ -3,7 +3,13 @@
 - ansible.builtin.debug:
     var: kvm_deployment
 
-- name: Append kvm_deployment.virtual_machines in target_vms_list
+- name: create-vm-clones | Run Asserts
+  ansible.builtin.assert:
+    that:
+      - kvm_deployment.template is defined
+      - kvm_deployment.virtual_machines is defined
+
+- name: create-vm-clones | Append kvm_deployment.virtual_machines in target_vms_list
   ansible.builtin.set_fact:
     target_vms_list: "{{target_vms_list + [item.name]}}"
   with_items: "{{kvm_deployment.virtual_machines}}"
@@ -25,7 +31,7 @@
         - "You have forced cloning"
         - "Existing VM will be deleted"
 
-  - name: Remove VM if exists
+  - name: create-vm-clones | Remove VM if exists
     ansible.builtin.shell: |
         if virsh list --all |egrep {{item}};then
           if virsh domstate {{item}}|egrep "shut off";then
@@ -39,18 +45,18 @@
   when: force_clone|bool
 
 # _guests.list_vms will store all kvm virtual machines after running this task.
-- name: List all VMs
+- name: create-vm-clones | List all VMs
   community.libvirt.virt:
     command: list_vms
   register: _guests
 
-- name: Check guest_exists=false if guest not available
+- name: create-vm-clones | Check guest_exists=false if guest not available
   ansible.builtin.debug:
     msg: "Cloning will be skipped for {{item.name}}. It already exists"
   with_items: "{{kvm_deployment.virtual_machines}}"
   when: item.name in _guests.list_vms
 
-- name: Include virt-clone.yml
+- name: create-vm-clones | Include virt-clone.yml
   ansible.builtin.include_tasks: virt-clone.yml
   with_items: "{{kvm_deployment.virtual_machines}}"
   loop_control:

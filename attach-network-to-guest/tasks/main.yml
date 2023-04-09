@@ -8,33 +8,39 @@
     minutes: 15
     prompt: "\nINFO: You are processing operation on above input:\n-> Review and continue"
 
-- name: Fetch KVM guest list
+- name: attach-network-to-guest | Run Asserts
+  ansible.builtin.assert:
+    that:
+      - kvm_deployment.net_list is defined
+      - kvm_deployment.virtual_machines is defined
+
+- name: attach-network-to-guest | Fetch KVM guest list
   ansible.builtin.shell: virsh list --all|egrep "\s\-|\s[0-9]"|awk '{print $2}'
   register: _guest_list
 
-- name: List guest machines of KVM host
+- name: attach-network-to-guest | List guest machines of KVM host
   ansible.builtin.debug:
     var: _guest_list.stdout_lines
 
 # _knet.ansible_facts.ansible_libvirt_networks will store all kvm virtual networks after running this task.
-- name: Get KVM Network facts
+- name: attach-network-to-guest | Get KVM Network facts
   community.libvirt.virt_net:
     command: facts
   register: _knet
 
-- name: Check network_exists=false if network not available
+- name: attach-network-to-guest | Check network_exists=false if network not available
   ansible.builtin.set_fact:
     network_exists: false
   with_items: "{{kvm_deployment.net_list}}"
   when: not item in _knet.ansible_facts.ansible_libvirt_networks
 
-- name: Check guest_exists=false if guest not available
+- name: attach-network-to-guest | Check guest_exists=false if guest not available
   ansible.builtin.set_fact:
     guest_exists: false
   with_items: "{{kvm_deployment.virtual_machines}}"
   when: not item.name in _guest_list.stdout_lines
 
-- name: Run asserts
+- name: attach-network-to-guest | Run asserts
   ansible.builtin.assert:
     that:
       - guest_exists|bool
@@ -43,7 +49,7 @@
       - "Review kvm_deployment.net_list and kvm_deployment.virtual_machines"
       - "Provided resources must be exists on KVM host" 
 
-- name: Include attach-interface.yml
+- name: attach-network-to-guest | Include attach-interface.yml
   ansible.builtin.include_tasks: attach-interface.yml
   with_items: "{{kvm_deployment.virtual_machines}}"
   loop_control:

@@ -3,41 +3,41 @@
 - ansible.builtin.debug:
     msg: "Updating cpu/memory of {{guest.name}}"
 
-- name: Get {{guest.name}} resources info
+- name: guest-cpu-ram |Get {{guest.name}} resources info
   ansible.builtin.shell: virsh dominfo {{guest.name}}
   register: _dominfo
 
 - ansible.builtin.debug:
     var: _dominfo.stdout_lines
 
-- name: Get cpu count for {{guest.name}} machine
+- name: guest-cpu-ram |Get cpu count for {{guest.name}} machine
   ansible.builtin.shell: virsh dominfo {{guest.name}}|awk '/^CPU/{print $2}'
   register: _cpu_count
 
-- name: Get current memory of {{guest.name}}
+- name: guest-cpu-ram |Get current memory of {{guest.name}}
   ansible.builtin.shell: virsh dominfo {{guest.name}}|awk '/^Max\smemory/{print $3}'
   register: _mem
 
-- name: Skip cpu tasks if count is same
+- name: guest-cpu-ram |Skip cpu tasks if count is same
   ansible.builtin.debug:
     msg: 
       - "{{guest.name}} already has {{guest.cpu}} CPUs"
       - "Skipping CPU Modification"
   when: _cpu_count.stdout|int == guest.cpu
 
-- name: Skip memory tasks if count is same
+- name: guest-cpu-ram |Skip memory tasks if count is same
   ansible.builtin.debug:
     msg: 
       - "{{guest.name}} already has {{guest.memory}} KB Memory"
       - "Skipping Memory Modification"
   when: _mem.stdout|int == guest.memory
 
-- name: Set fact shut_guest
+- name: guest-cpu-ram |Set fact shut_guest
   ansible.builtin.set_fact:
     shut_guest: true
   when: _cpu_count.stdout|int != guest.cpu or _mem.stdout|int != guest.memory
 
-- name: Shutdown {{guest.name}} guest machine
+- name: guest-cpu-ram |Shutdown {{guest.name}} guest machine
   ansible.builtin.shell: |
     while true;do
       if virsh domstate {{guest.name}}|egrep "running";then
@@ -52,7 +52,7 @@
     done
   when: shut_guest is defined and shut_guest|bool
 
-- name: Setting {{guest.name}} cpu count to {{guest.cpu}}
+- name: guest-cpu-ram |Setting {{guest.name}} cpu count to {{guest.cpu}}
   ansible.builtin.shell: |
     virsh setvcpus --domain {{guest.name}} \
       --count {{guest.cpu}} \
@@ -62,7 +62,7 @@
       --maximum --config
   when: _cpu_count.stdout|int != guest.cpu
 
-- name: Setting {{guest.name}} memory to {{guest.memory}} KB
+- name: guest-cpu-ram |Setting {{guest.name}} memory to {{guest.memory}} KB
   ansible.builtin.shell: |
     virsh setmem --domain {{guest.name}} \
       --size {{guest.memory}} --config

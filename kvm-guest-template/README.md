@@ -1,5 +1,4 @@
 # Create KVM Guest Template
-***
 
 - [Create KVM Guest Template](#create-kvm-guest-template)
   - [Overview](#overview)
@@ -9,14 +8,12 @@
   - [Create KVM Guest with Custom Config](#create-kvm-guest-with-custom-config)
 
 ## Overview
-***
 Create a KVM guest given of your choice. Check `supported_images` in [default vars](./defaults/main.yml).
 
 Supported KVM guests:
 - ubuntu2204(Ubuntu 22.04 LTS)
 
 ## Variables Annotation
-***
 - Review [deafult vars](./defaults/main.yml) for below input source
     - Set image source
     - Version
@@ -35,12 +32,10 @@ Supported KVM guests:
     - Using `-e image_download=true` to force image download
 
 ## Implementation
-***
 
 - `kvm_guest_user` and `kvm_guest_password` are used to authenticate guest template and make changes in OS. By default these vars set from `chpasswd` provided in user data cloud init.
 
-- Run Playbook
-Along with creating guest template, playbook with make following changes in guest template:
+- **Run Playbook:** Along with creating guest template, playbook with make following changes in guest template:
 
 ```
 - Enable Serial Console
@@ -84,7 +79,7 @@ Installation finished. No error reported.
 
 
 ## Create KVM Guest with Custom Config
-***
+
 - Create a yaml with and define guest VM config and pass to playbook using `custom_guest_input` extra var.
 
 ```yaml

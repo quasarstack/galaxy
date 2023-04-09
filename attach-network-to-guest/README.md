@@ -26,6 +26,7 @@ Networks will be attached to VM in the specified order. If guest machine already
 
   vars:
     kvm_deployment:
+      template: ubuntu2204-vm-template
       net_list:
         - br-mgmt
         - br-vxlan 

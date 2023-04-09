@@ -8,6 +8,7 @@
 #  - B
 
 kvm_deployment:
+  template: ubuntu2204-vm-template # this var wont be used in this role
   net_list:
     - br-mgmt
     - br-vxlan 

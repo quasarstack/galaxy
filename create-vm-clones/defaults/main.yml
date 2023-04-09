@@ -1,5 +1,7 @@
+target_vms_list: []
+
 kvm_deployment:
-  template: ubuntu2204-vm-template # this var wont be used in role
+  template: ubuntu2204-vm-template
   net_list: # This var is not used this role
     - br-mgmt
     - br-vxlan 
@@ -10,4 +12,5 @@ kvm_deployment:
       networks: # this var wont be used in role
         - br-mgmt
 
-guest_exists: true
+force_clone: false
+        

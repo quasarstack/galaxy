@@ -1,0 +1,21 @@
+
+- ansible.builtin.debug:
+    msg: "Creating clone {{guest.name}} from {{kvm_deployment.template}}"
+
+- name: Create clone
+  ansible.builtin.command: virt-clone -o {{kvm_deployment.template}} -n {{guest.name}} --auto-clone
+
+- name: Get dominfo of created VM
+  ansible.builtin.command: virsh dominfo {{guest.name}}
+  register: _dominfo
+
+- ansible.builtin.debug:
+    var: _dominfo.stdout_lines
+
+- name: Get domblklist of created VM
+  ansible.builtin.command: virsh domblklist {{guest.name}}
+  register: _domblk
+
+- ansible.builtin.debug:
+    var: _domblk.stdout_lines
+

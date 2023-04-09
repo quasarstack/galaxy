@@ -1,6 +1,6 @@
 # Attach a Network to a KVM Guest
 ***
-This role provides capability to attach a kvm virtual network to an existing KVM guest.
+This role provides capability to create clones of a given template
 
 ## Required Ansible Collections
 ***
@@ -13,6 +13,7 @@ ansible-galaxy collection install community.libvirt
 
 ## Implementation
 ***
+
 1. Review [default vars](./defaults/main.yml) before running the this role. You can overwrite the vars using below playbook example.
    
 2. Create a playbook
@@ -24,25 +25,21 @@ ansible-galaxy collection install community.libvirt
 
   vars:
     kvm_deployment:
-      template: ubuntu2204-vm-template # This var is not used this role
-      net_list: # This var is not used this role
+      template: ubuntu2204-vm-template
+      net_list:
         - br-mgmt
         - br-vxlan 
       virtual_machines:
         - name: ubuntu2204
-          cpu: 1
-          memory: 1024 # in KB
-          networks: # this var wont be used in role
+          networks: # Update below list to attach interface of the networks
             - br-mgmt
+            - br-vxlan
   roles:
-  - role: guest-cpu-ram
+  - role: create-vm-clones
 
 ```
 
 2. Run playbook
 ```bash
-$ ansible-playbook pb.yml
-
-# To force clone -> This will remove existing VM
-$ ansible-playbook pb.yml -e force_clone=true
-``` 
+ansible-playbook pb.yml
+```

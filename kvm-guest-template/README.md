@@ -10,14 +10,14 @@
 
 ## Overview
 ***
-Create a KVM guest given of your choice. Check `supported_images` in [default vars](./create-kvm-guest/defaults/main.yml).
+Create a KVM guest given of your choice. Check `supported_images` in [default vars](./defaults/main.yml).
 
 Supported KVM guests:
 - ubuntu2204(Ubuntu 22.04 LTS)
 
 ## Variables Annotation
 ***
-- [image_type](./create-kvm-guest/defaults/main.yml)
+- Review [deafult vars](./defaults/main.yml) for below input source
     - Set image source
     - Version
     - Destination directory
@@ -25,49 +25,30 @@ Supported KVM guests:
     - CPU
     - Memory
     - Disk Size (default 20G, change based on your requirment)
-- [user_data](./create-kvm-guest/defaults/main.yml)
-    Default [user-data](./create-kvm-guest/files/user-data) file. Cloud-init file to set:
-    - Hostname
-    - User and password
-    - SSH config
-    - SSH Auth Keys
+    - user_data cloud-init config
+    - network_config cloud-init network config
+- Review [default user data cloudinit](./files/cloud-init/user-data.yml)
+- Review [default network config for cloudinit](./files/cloud-init/network-config.yml)
 
 - [image_download](./create-kvm-guest/defaults/main.yml)
     - Default is False. Image download will be skipped if already exists
     - Using `-e image_download=true` to force image download
 
-Review [default vars](./create-kvm-guest/defaults/main.yml) before running the role and alter the behavior of the role by overwriting ansible variables using -e.
-
 ## Implementation
 ***
 
-- Export username/password of VM, make sure this matches in [user-data](./create-kvm-guest/files/cloud-init/user-data.yml)
-```bash
-export kvm_guest_user=ubuntu
-export kvm_guest_password=redhat123
-```
-
-- Create a playbook `kvm-guest-template.yml`
-```yaml
----
-- hosts: localhost
-  gather_facts: true
-  become: yes
-  vars:
-    guest_os: ubuntu2204
-  roles:
-  - role: create-kvm-guest
-```
+- `kvm_guest_user` and `kvm_guest_password` are used to authenticate guest template and make changes in OS. By default these vars set from `chpasswd` provided in user data cloud init.
 
 - Run Playbook
 ```bash
-ansible-playbook kvm-guest-template.yml
+ansible-playbook playbooks/kvm-guest-template.yml
 ```
 
 **NOTE:** 
-  - Playbook will pause for 30 minutes and ask to reinstall grub in the image.
-  - Follow [Reinstall Grub in Image](#reinstall-grub-in-image) to reinstall grub in image
-  - Post reinstall grub, continue playbook with Ctrl + C , and C
+- Playbook will pause for 30 minutes and ask to reinstall grub in the image.
+- Follow [Reinstall Grub in Image](#reinstall-grub-in-image) to reinstall grub in image
+- Post reinstall grub, continue playbook with Ctrl + C , and C
+- If playbook fails while running tasks for `new_kvm_guest` group, re-run playbook with `-e cleanup=false`, to skip template creation, and continue to setup template OS
 
 ### Reinstall Grub in Image
 ```bash
@@ -84,13 +65,13 @@ chroot /mnt
 grub-install /dev/sda
 ```
 
-- Successful grub reinstall msg would be like below:
+* Successful grub reinstall msg would be like below:
 ```
 Installing for i386-pc platform.
 Installation finished. No error reported.
 ```
 
-- Ctrl + d -> Twrice to exit from rescue mode
+* Ctrl + d -> Twrice to exit from rescue mode
 
 
 ## Create KVM Guest with Custom Config
@@ -117,7 +98,7 @@ image_type:
       disk: openstack-ctrl1.img
       size: 20G
 ```
-- If you wish to set custom username/password, create your own cloudinit file and pass to playbook using `user_data` extra var. Default [cloudinit](./create-kvm-guest/files/cloud-init/user-data.yml)
+- If you wish to set custom username/password, create your own cloudinit file and pass to playbook using `user_data` extra var. Default [cloudinit](./files/cloud-init/user-data.yml)
 
 **Run Playbook with custom user_data**
 ```bash

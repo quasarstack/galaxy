@@ -16,8 +16,8 @@ system_info:
         - ""
 
 chpasswd:
-  list: |
-    ubuntu:redhat123
+  list: 
+    - ubuntu:redhat123
   expire: false
     
 bootcmd:

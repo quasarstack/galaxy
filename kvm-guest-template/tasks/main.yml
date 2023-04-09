@@ -156,6 +156,20 @@
     minutes: 2
   when: cleanup|bool
 
+- name: Start/Reboot {{image_type[guest_os]['template']['name']}} VM
+  ansible.builtin.shell: |
+    #if virsh domstate  {{image_type[guest_os]['template']['name']}}|egrep "running"; then
+    #  virsh shutdown {{image_type[guest_os]['template']['name']}}
+    #  sleep 30
+    #fi
+    if virsh domstate  {{image_type[guest_os]['template']['name']}}|egrep "shut off"; then
+      virsh start {{image_type[guest_os]['template']['name']}}
+      sleep 30
+    fi
+  args:
+    executable: /bin/bash
+  when: not cleanup|bool
+  
 - name: Get {{image_type[guest_os]['template']['name']}} IP
   ansible.builtin.command: virsh domifaddr {{image_type[guest_os]['template']['name']}}
   register: _guest_eth
@@ -172,9 +186,22 @@
   ansible.builtin.shell: virsh domifaddr {{image_type[guest_os]['template']['name']}}| awk '/vnet/{print $4}'|cut -d'/' -f1
   register: _ip
 
+- name: include vars from files/cloud-init/user-data.yml
+  ansible.builtin.include_vars: "{{role_path}}/files/cloud-init/user-data.yml"
+
+- ansible.builtin.set_fact:
+    user_creds: "{{chpasswd.list.0|split(':')}}"
+
+- ansible.builtin.meta: refresh_inventory
+
+- name: Set fact kvm_guest_user and kvm_guest_password
+  ansible.builtin.set_fact:
+    kvm_guest_user: "{{ user_creds[0] }}"
+    kvm_guest_password: "{{ user_creds[1] }}"
+
 - name: Add Created host in new_kvm_guest group
   ansible.builtin.add_host:
     name: "{{_ip.stdout}}"
     groups: new_kvm_guest
-    ansible_user: "{{lookup('env', 'kvm_guest_user')}}"
-    ansible_password: "{{lookup('env', 'kvm_guest_password')}}"
+    ansible_user: "{{kvm_guest_user}}"
+    ansible_password: "{{kvm_guest_password}}"

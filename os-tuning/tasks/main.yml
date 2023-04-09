@@ -1,5 +1,50 @@
 ---
 
-- include_tasks: static-ip.yml
-- include_tasks: biosdevname.yml
-- include_tasks: disable-ipv6.yml
+- name: Current proc/cmdline
+  ansible.builtin.debug:
+    msg: "{{lookup('ansible.builtin.file', '/proc/cmdline')}}"
+
+- name: Take backup of /etc/default/grub
+  ansible.builtin.copy:
+    src: /etc/default/grub
+    dest: /etc/default/grub-{{ansible_date_time.iso8601_basic_short}}
+    mode: 0644
+    owner: root
+    group: root
+    remote_src: yes
+
+- name: Update GRUB_CMDLINE_LINUX in /etc/default/grub
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX='
+    line: 'GRUB_CMDLINE_LINUX="{{grub_param}}"'
+    state: present
+  register: _update_grub_param
+  when: 
+    - ansible_os_family == "Debian"
+    - ansible_distribution_version == "22.04"
+
+- name: Update GRUB_CMDLINE_LINUX_DEFAULT in /etc/default/grub
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX_DEFAULT='
+    line: 'GRUB_CMDLINE_LINUX_DEFAULT="{{grub_default_param}}"'
+    state: present
+  register: _update_grub_default_param
+  when: 
+    - ansible_os_family == "Debian"
+    - ansible_distribution_version == "22.04"
+
+- block:
+  - name: disable-ipv6 | Generate grub config for ubuntu machines
+    command: grub-mkconfig -o /boot/grub/grub.cfg
+    when: ansible_os_family == "Debian"
+
+  - name: disable-ipv6 | Generate grub config for RedHat based machines
+    command: grub2-mkconfig -o /boot/grub2/grub.cfg
+    when: ansible_os_family == "RedHat"
+
+  - name: set fact host_reboot=true
+    ansible.builtin.set_fact:
+      host_reboot: true
+  when: _update_grub_param is changed or _update_grub_default_param is changed

@@ -1,0 +1,55 @@
+---
+
+- ansible.builtin.debug:
+    var: kvm_deployment
+
+- ansible.builtin.pause:
+    echo: yes
+    minutes: 15
+    prompt: "\nINFO: You are processing operation on above input:\n-> Review and continue"
+
+- name: generate-inventory | Run Asserts
+  ansible.builtin.assert:
+    that:
+      - kvm_deployment.virtual_machines is defined
+      - lookup('env', 'kvm_guest_user') != ""
+      - lookup('env', 'kvm_guest_password') != ""
+
+- name: generate-inventory | List all VMs
+  community.libvirt.virt:
+    command: list_vms
+  register: _guests
+
+- name: generate-inventory | Fail is given vm does not exists
+  ansible.builtin.fail:
+    msg: 
+      - "VM {{item.name}} does not exists"
+      - "Stopping playbook. Fix variables file and re-run playbook"
+  with_items: "{{kvm_deployment.virtual_machines}}"
+  when: item.name not in _guests.list_vms
+
+- name: generate-inventory | Start KVM guests
+  ansible.builtin.shell: |
+    if ! virsh domstate {{item.name}} |egrep "running";then
+      virsh start {{item.name}}
+    fi
+  with_items: "{{kvm_deployment.virtual_machines}}"
+
+- ansible.builtin.meta: refresh_inventory
+
+- name: generate-inventory | Include tasks update-inventory.yml
+  ansible.builtin.include_tasks: update-inventory.yml
+  with_items: "{{kvm_deployment.virtual_machines}}"
+  loop_control:
+    loop_var: guest
+
+- ansible.builtin.debug:
+    var: vms_inventory
+
+- name: generate-inventory | Add Created host in vms_group group
+  ansible.builtin.add_host:
+    name: "{{item}}"
+    groups: vms_group
+    ansible_user: "{{lookup('env', 'kvm_guest_user')}}"
+    ansible_password: "{{lookup('env', 'kvm_guest_password')}}"
+  with_items: "{{vms_inventory}}"

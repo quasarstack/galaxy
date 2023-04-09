@@ -1,0 +1,29 @@
+---
+
+- ansible.builtin.debug:
+    var: kvm_deployment
+
+- ansible.builtin.pause:
+    echo: yes
+    minutes: 15
+    prompt: "\nINFO: You are processing operation on above input:\n-> Review and continue"
+
+- name: setup-static-ip | Run Asserts
+  ansible.builtin.assert:
+    that:
+      - kvm_deployment.virtual_machines is defined
+
+# _guests.list_vms will store all kvm virtual machines after running this task.
+- name: setup-static-ip | List all VMs
+  community.libvirt.virt:
+    command: list_vms
+  register: _guests
+  delegate_to: localhost
+  become: true
+
+- name: setup-static-ip | Include static.yml
+  ansible.builtin.include_tasks: static-ip.yml
+  with_items: "{{kvm_deployment.virtual_machines}}"
+  loop_control:
+    loop_var: guest
+  when: guest.name in _guests.list_vms

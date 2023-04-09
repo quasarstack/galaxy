@@ -1,0 +1,25 @@
+---
+
+- ansible.builtin.debug:
+    msg: "Updating inventory with {{guest.name}} IP"
+
+- name: generate-inventory | Get default IP Address
+  ansible.builtin.shell: |
+    mac=$(virsh domiflist {{guest.name}}|egrep {{kvm_deployment.default_network}}|awk '{print $5}')
+    default_ip=$(virsh domifaddr {{guest.name}}|egrep $mac|awk '{print $4}'|cut -d'/' -f1)
+    echo $default_ip
+  register: _default_ip
+  args:
+    executable: /bin/bash
+
+- name: generate-inventory | Append fetch IP in vms_inventory
+  ansible.builtin.set_fact:
+    vms_inventory: "{{vms_inventory + [_default_ip.stdout]}}"
+
+- name: generate-inventory | Take snapshot of {{guest.name}}
+  ansible.builtin.shell: |
+    if ! virsh snapshot-list --domain {{guest.name}}|egrep "{{guest.name}}-base";then
+      virsh snapshot-create-as --domain {{guest.name}} --name {{guest.name}}-base
+    fi
+  args:
+    executable: /bin/bash

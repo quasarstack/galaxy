@@ -1,0 +1,18 @@
+---
+
+- ansible.builtin.debug:
+    msg: "Update static ip config for {{guest.name}}"
+
+- name: setup-static-ip | Template out netplan config
+  ansible.builtin.template:
+    src: ubuntu-netplan.j2
+    dest: /etc/netplan/50-cloud-init.yaml
+    mode: 0644
+    owner: root
+    group: root
+  register: _static_config
+
+- name: setup-static-ip | Enable network changes
+  command: netplan apply
+  when: _static_config is changed
+

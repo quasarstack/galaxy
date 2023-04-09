@@ -1,0 +1,15 @@
+---
+- hosts: localhost
+  gather_facts: true
+  become: true
+
+  roles:
+  - role: generate-inventory
+
+
+- hosts: vms_group
+  gather_facts: true
+  become: true
+
+  roles:
+  - role: set-static-ip

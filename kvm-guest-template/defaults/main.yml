@@ -22,7 +22,7 @@ image_type:
       cpu: 2
       memory: 4096
       disk: ubuntu2204-vm-template.img
-      size: 20G
+      size: 10G
     
 
 # ansible will check if image exists or not in local_path

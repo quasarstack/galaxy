@@ -61,6 +61,7 @@
   
   - name: STOP interfaces attachment as machine has unknown networks
     ansible.builtin.fail:
+      msg:
         - "STOP interfaces attachment"
         - "Either one of the network from {{guest.networks}} already attached to {{guest.name}}"
         - "Or Machine has some unknown network"

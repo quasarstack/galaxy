@@ -7,4 +7,14 @@
 #  - A
 #  - B
 
+kvm_deployment:
+  net_list:
+    - br-mgmt
+    - br-vxlan 
+  virtual_machines:
+    - name: ubuntu2204
+
+
+  
 network_exists: true
+guest_exists: true

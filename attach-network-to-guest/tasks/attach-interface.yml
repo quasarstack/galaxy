@@ -1,0 +1,47 @@
+---
+
+- ansible.builtin.debug:
+    msg: "Attaching interface on {{guest.name}}"
+
+- name: List interfaces of {{guest.name}} machine
+  ansible.builtin.shell: virsh domiflist {{guest.name}}
+  register: _iflist
+
+- name: Set fact ifexists=true if network already attached
+  ansible.builtin.set_fact:
+    ifexists: true
+  with_items: "{{kvm_deployment.net_list}}"
+  when: _iflist.stdout is search(item)
+
+- block:
+  - ansible.builtin.debug:
+      msg:
+        - "One of the network from {{kvm_deployment.net_list}} already attached to {{guest.name}}"
+        - "Run -> virsh domiflist {{guest.name}} to validate"
+        - "Review README for information to handle this scenario"
+        - "Stopping playbook"
+  
+  - ansible.builtin.meta: end_play
+  when: ifexists is defined and ifexists|bool
+
+- name: Shutdown {{guest.name}} guest machine
+  ansible.builtin.shell: |
+    while true;do
+      if virsh domstate {{guest.name}}|egrep "running";then
+        virsh shutdown {{guest.name}}
+      fi
+
+      if ! virsh domstate {{guest.name}}|egrep "shut off";then
+        sleep 10
+      else
+        exit 0
+      fi
+    done
+
+- name: Attach interface to {{guest.name}}
+  ansible.builtin.shell: |
+    virsh attach-interface --domain {{guest.name}} --config \
+      --type network \
+      --source {{item}} \
+      --model virtio
+  with_items: "{{kvm_deployment.net_list}}"

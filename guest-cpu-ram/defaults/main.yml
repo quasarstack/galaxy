@@ -1,0 +1,10 @@
+kvm_deployment:
+  net_list: # This var is not used this role
+    - br-mgmt
+    - br-vxlan 
+  virtual_machines:
+    - name: ubuntu2204
+      cpu: 1
+      memory: 1024 # in KB
+
+guest_exists: true

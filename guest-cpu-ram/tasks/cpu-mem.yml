@@ -1,0 +1,68 @@
+---
+
+- ansible.builtin.debug:
+    msg: "Updating cpu/memory of {{guest.name}}"
+
+- name: Get {{guest.name}} resources info
+  ansible.builtin.shell: virsh dominfo {{guest.name}}
+  register: _dominfo
+
+- ansible.builtin.debug:
+    var: _dominfo.stdout_lines
+
+- name: Get cpu count for {{guest.name}} machine
+  ansible.builtin.shell: virsh dominfo {{guest.name}}|awk '/^CPU/{print $2}'
+  register: _cpu_count
+
+- name: Get current memory of {{guest.name}}
+  ansible.builtin.shell: virsh dominfo {{guest.name}}|awk '/^Max\smemory/{print $3}'
+  register: _mem
+
+- name: Skip cpu tasks if count is same
+  ansible.builtin.debug:
+    msg: 
+      - "{{guest.name}} already has {{guest.cpu}} CPUs"
+      - "Skipping CPU Modification"
+  when: _cpu_count.stdout|int == guest.cpu
+
+- name: Skip memory tasks if count is same
+  ansible.builtin.debug:
+    msg: 
+      - "{{guest.name}} already has {{guest.memory}} KB Memory"
+      - "Skipping Memory Modification"
+  when: _mem.stdout|int == guest.memory
+
+- name: Set fact shut_guest
+  ansible.builtin.set_fact:
+    shut_guest: true
+  when: _cpu_count.stdout|int != guest.cpu or _mem.stdout|int != guest.memory
+
+- name: Shutdown {{guest.name}} guest machine
+  ansible.builtin.shell: |
+    while true;do
+      if virsh domstate {{guest.name}}|egrep "running";then
+        virsh shutdown {{guest.name}}
+      fi
+
+      if ! virsh domstate {{guest.name}}|egrep "shut off";then
+        sleep 10
+      else
+        exit 0
+      fi
+    done
+  when: shut_guest is defined and shut_guest|bool
+
+- name: Setting {{guest.name}} cpu
+  ansible.builtin.shell: |
+    virsh setvcpus --domain {{guest.name}} \
+      --count {{guest.cpu}} \
+      --maximum --config
+  when: _cpu_count.stdout|int != guest.cpu
+
+- name: Setting {{guest.name}} memory
+  ansible.builtin.shell: |
+    virsh setmem --domain {{guest.name}} \
+      --size {{guest.memory}} --config
+    virsh setmaxmem --domain {{guest.name}} \
+      --size {{guest.memory}} --config
+  when: _mem.stdout|int != guest.memory

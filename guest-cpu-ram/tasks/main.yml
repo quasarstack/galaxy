@@ -1,0 +1,35 @@
+---
+
+- ansible.builtin.debug:
+    var: kvm_deployment
+
+- ansible.builtin.pause:
+    echo: yes
+    minutes: 15
+    prompt: "\nINFO: You are processing operation on above input:\n-> Review and continue"
+
+# _guests.list_vms will store all kvm virtual machines after running this task.
+- name: List all VMs
+  community.libvirt.virt:
+    command: list_vms
+  register: _guests
+
+- name: Check guest_exists=false if guest not available
+  ansible.builtin.set_fact:
+    guest_exists: false
+  with_items: "{{kvm_deployment.virtual_machines}}"
+  when: not item.name in _guests.list_vms
+
+- name: Run asserts
+  ansible.builtin.assert:
+    that:
+      - guest_exists|bool
+    fail_msg:
+      - "Review kvm_deployment.virtual_machines"
+      - "Provided resources must be exists on KVM host"
+
+- name: Include cpu-mem.yml
+  ansible.builtin.include_tasks: cpu-mem.yml
+  with_items: "{{kvm_deployment.virtual_machines}}"
+  loop_control:
+    loop_var: guest

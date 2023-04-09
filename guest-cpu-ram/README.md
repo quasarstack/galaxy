@@ -13,8 +13,6 @@ ansible-galaxy collection install community.libvirt
 
 ## Implementation
 ***
-Networks will be attached to VM in the specified order. If guest machine already has an interface attached to it from given net_list. Playbook will be stopped. Since interface order may impact OS/App functionality, so this will ensure we are attaching network in correct order.
-
 1. Review [default vars](./defaults/main.yml) before running the this role. You can overwrite the vars using below playbook example.
    
 2. Create a playbook
@@ -26,17 +24,19 @@ Networks will be attached to VM in the specified order. If guest machine already
 
   vars:
     kvm_deployment:
-      net_list:
+      net_list: # This var is not used this role
         - br-mgmt
         - br-vxlan 
       virtual_machines:
         - name: ubuntu2204
+          cpu: 1
+          memory: 1024 # in KB
   roles:
-  - role: attach-network-to-guest
+  - role: guest-cpu-ram
 
 ```
 
 2. Run playbook
 ```bash
 ansible-playbook pb.yml
-```
+``` 

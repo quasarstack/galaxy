@@ -49,19 +49,14 @@
   - ansible.builtin.debug:
       var: attach_interfaces
     
-  - name: SKIP interfaces attachment if network order id matching
-    ansible.builtin.debug:
-      msg: "Network Order is matching, skipping interface attachment for {{guest.name}}"
-    when: attach_interfaces is match('skip')
-
-  - name: CONTINUE interfaces attachment as machine has no other network than default
-    ansible.builtin.debug:
-      msg: "CONTINUE to attach network interfaces"
-    when: attach_interfaces|bool
-  
-  - name: STOP interfaces attachment as machine has unknown networks
-    ansible.builtin.fail:
-      msg:
+  - name: Run assert for attach_interfaces
+    ansible.builtin.assert:
+      than: 
+        - attach_interfaces is match('skip') or attach_interfaces|bool
+      success_msg:
+        - "Network Order is matching, skipping interface attachment for {{guest.name}}"
+        - "OR No other network than default. CONTINUE to attach network interfaces"
+      fail_msg:
         - "STOP interfaces attachment"
         - "Either one of the network from {{guest.networks}} already attached to {{guest.name}}"
         - "Or Machine has some unknown network"
@@ -71,8 +66,7 @@
         - "Disable this role in playbook if you think machines already have networks attached in right order "
         - "You can manually delete additional network re-run the playbook"
         - "Review README for information to handle this scenario"
-    when: not attach_interfaces|bool
-
+        
   - block:  
     - name: Shutdown {{guest.name}} guest machine
       ansible.builtin.shell: |

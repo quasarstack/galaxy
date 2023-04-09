@@ -51,7 +51,7 @@
     
   - name: Run assert for attach_interfaces
     ansible.builtin.assert:
-      than: 
+      that: 
         - attach_interfaces is match('skip') or attach_interfaces|bool
       success_msg:
         - "Network Order is matching, skipping interface attachment for {{guest.name}}"
@@ -66,7 +66,7 @@
         - "Disable this role in playbook if you think machines already have networks attached in right order "
         - "You can manually delete additional network re-run the playbook"
         - "Review README for information to handle this scenario"
-        
+
   - block:  
     - name: Shutdown {{guest.name}} guest machine
       ansible.builtin.shell: |

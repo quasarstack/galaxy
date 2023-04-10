@@ -53,4 +53,5 @@
     groups: vms_group
     ansible_user: "{{lookup('env', 'kvm_guest_user')}}"
     ansible_password: "{{lookup('env', 'kvm_guest_password')}}"
+    ansible_become_pass: "{{lookup('env', 'kvm_guest_password')}}"
   with_items: "{{vms_inventory}}"

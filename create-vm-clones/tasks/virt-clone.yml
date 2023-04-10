@@ -3,7 +3,9 @@
     msg: "Creating clone {{guest.name}} from {{kvm_deployment.template}}"
 
 - name: create-vm-clones | Create clone
-  ansible.builtin.command: virt-clone -o {{kvm_deployment.template}} -n {{guest.name}} --auto-clone
+  ansible.builtin.shell: |
+    virt-clone -o {{kvm_deployment.template}} -n {{guest.name}} \
+      -f /var/lib/libvirt/images/{{guest.name}}.qcow2
 
 - name: create-vm-clones | Get dominfo of created VM
   ansible.builtin.command: virsh dominfo {{guest.name}}

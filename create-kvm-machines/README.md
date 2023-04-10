@@ -22,21 +22,12 @@ ansible-galaxy collection install community.libvirt
 - hosts: localhost
   gather_facts: true
   become: true
+  
+  vars_files:
+    - playbooks/vars/main.yml
 
-  vars:
-    kvm_deployment:
-      template: ubuntu2204-vm-template
-      net_list:
-        - br-mgmt
-        - br-vxlan 
-      virtual_machines:
-        - name: ubuntu2204
-          networks: # Update below list to attach interface of the networks
-            - br-mgmt
-            - br-vxlan
   roles:
-  - role: create-vm-clones
-
+  - role: create-kvm-machines
 ```
 
 2. Run playbook

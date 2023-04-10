@@ -1,0 +1,56 @@
+
+- ansible.builtin.debug:
+    msg: "Creating clone {{guest.name}} from {{kvm_deployment.template.image}}"
+
+#- name: create-vm-clones | Create clone
+#  ansible.builtin.shell: |
+#    virt-clone -o {{kvm_deployment.template}} -n {{guest.name}} \
+#      -f /var/lib/libvirt/images/{{guest.name}}.qcow2 --auto-clone
+#    sleep 10
+
+- name: Remove /var/lib/libvirt/images/{{guest.name}}.qcow2 if exists
+  ansible.builtin.file:
+    path: "/var/lib/libvirt/images/{{guest.name}}.qcow2"
+    state: absent
+
+- name: Create copy of {{kvm_deployment.template.image}}
+  ansible.builtin.command: cp {{kvm_deployment.template.image}} {{guest.name}}.qcow2
+  args:
+    chdir: /var/lib/libvirt/images
+
+- name: Create {{guest.name}} VM using disk image {{guest.name}}.qcow2
+  ansible.builtin.shell: |
+      virt-install --name {{guest.name}} \
+      --memory {{guest.memory}} \
+      --vcpu {{guest.cpu}} --cpu host \
+      --boot hd \
+      --disk /var/lib/libvirt/images/{{guest.name}}.qcow2 \
+      --import \
+      --os-variant {{kvm_deployment.template.os_variant}} \
+      --noautoconsole
+
+- name: Wait for {{guest.name}} to boot up
+  ansible.builtin.pause:
+    echo: yes
+    minutes: 2
+
+- name: create-vm-clones | Get dominfo of created VM
+  ansible.builtin.command: virsh dominfo {{guest.name}}
+  register: _dominfo
+
+- ansible.builtin.debug:
+    var: _dominfo.stdout_lines
+
+- name: create-vm-clones | Get domblklist of created VM
+  ansible.builtin.command: virsh domblklist {{guest.name}}
+  register: _domblk
+
+- ansible.builtin.debug:
+    var: _domblk.stdout_lines
+
+- name: Get {{guest.name}} IP
+  ansible.builtin.command: virsh domifaddr {{guest.name}}
+  register: _domifaddr
+
+- ansible.builtin.debug:
+    var: _domifaddr.stdout_lines

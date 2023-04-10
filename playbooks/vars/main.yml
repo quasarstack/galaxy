@@ -1,0 +1,22 @@
+kvm_deployment:
+  template:
+    name: ubuntu2204-vm-template
+    image: ubuntu22.04-updated-image.qcow2
+    os_variant: 'ubuntu22.04'
+  default_network: default
+  net_list: # This var is not used this role
+    - br-mgmt
+    - br-vxlan
+  virtual_machines:
+    - name: ubuntu2204-test1
+      cpu: 1
+      memory: 1024
+      networks: # Update below list to attach interface of the networks
+        - br-mgmt
+        - br-vxlan
+    - name: ubuntu2204-test2
+      cpu: 1
+      memory: 1024
+      networks: # Update below list to attach interface of the networks
+        - br-mgmt
+        - br-vxlan

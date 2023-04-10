@@ -16,8 +16,8 @@
 
 - ansible.builtin.debug:
     msg:
-      - "Selected Guest Template: {{kvm_deployment.template}}"
-      - "Ansible will create following clones from above template:"
+      - "Selected Source Image: {{kvm_deployment.template.image}}"
+      - "Ansible will create copy of the source image matching target VM name"
       - "{{target_vms_list}}"
 
 - ansible.builtin.pause:
@@ -29,18 +29,17 @@
   - ansible.builtin.debug:
       msg:
         - "You have forced cloning"
-        - "Existing VM will be deleted"
+        - "Existing VMs will be deleted"
 
   - name: create-vm-clones | Remove VM if exists
     ansible.builtin.shell: |
         if virsh list --all |egrep {{item}};then
-          if virsh domstate {{item}}|egrep "shut off";then
+          if ! virsh domstate {{item}}|egrep "shut off";then
             virsh shutdown {{item}}
             sleep 10
           fi
           virsh undefine {{item}} --remove-all-storage
         fi
-        exit 0
     with_items: "{{target_vms_list}}"
   when: force_clone|bool
 

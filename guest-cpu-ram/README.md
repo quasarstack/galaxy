@@ -22,18 +22,9 @@ ansible-galaxy collection install community.libvirt
   gather_facts: true
   become: true
 
-  vars:
-    kvm_deployment:
-      template: ubuntu2204-vm-template # This var is not used this role
-      net_list: # This var is not used this role
-        - br-mgmt
-        - br-vxlan 
-      virtual_machines:
-        - name: ubuntu2204
-          cpu: 1
-          memory: 1024 # in KB
-          networks: # this var wont be used in role
-            - br-mgmt
+  vars_files:
+    - playbooks/vars/main.yml
+  
   roles:
   - role: guest-cpu-ram
 

@@ -56,9 +56,15 @@
   with_items: "{{kvm_deployment.virtual_machines}}"
   when: item.name in _guests.list_vms
 
+#- name: create-vm-clones | syspend {{kvm_deployment.template}}
+#  ansible.builtin.command: virsh suspend {{kvm_deployment.template}}
+
 - name: create-vm-clones | Include virt-clone.yml
   ansible.builtin.include_tasks: virt-clone.yml
   with_items: "{{kvm_deployment.virtual_machines}}"
   loop_control:
     loop_var: guest
   when: guest.name not in _guests.list_vms
+
+#- name: create-vm-clones | resume {{kvm_deployment.template}}
+#  ansible.builtin.command: virsh resume {{kvm_deployment.template}}

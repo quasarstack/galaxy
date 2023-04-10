@@ -32,6 +32,7 @@
   ansible.builtin.shell: |
     if ! virsh domstate {{item.name}} |egrep "running";then
       virsh start {{item.name}}
+      sleep 30
     fi
   with_items: "{{kvm_deployment.virtual_machines}}"
 

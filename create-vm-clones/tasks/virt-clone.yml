@@ -5,7 +5,8 @@
 - name: create-vm-clones | Create clone
   ansible.builtin.shell: |
     virt-clone -o {{kvm_deployment.template}} -n {{guest.name}} \
-      -f /var/lib/libvirt/images/{{guest.name}}.qcow2
+      -f /var/lib/libvirt/images/{{guest.name}}.qcow2 --auto-clone
+    sleep 10
 
 - name: create-vm-clones | Get dominfo of created VM
   ansible.builtin.command: virsh dominfo {{guest.name}}

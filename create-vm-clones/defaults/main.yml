@@ -13,4 +13,3 @@ kvm_deployment:
         - br-mgmt
 
 force_clone: false
-        

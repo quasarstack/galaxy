@@ -38,10 +38,11 @@
             virsh shutdown {{item}}
             sleep 10
           fi
-          virsh undefine {{item}} --remove-all-storage
+          virsh undefine {{item}} --remove-all-storage \
+            --delete-storage-volume-snapshots --snapshots-metadata
         fi
     with_items: "{{target_vms_list}}"
-  when: force_clone|bool
+  when: cleanup|bool
 
 # _guests.list_vms will store all kvm virtual machines after running this task.
 - name: create-vm-clones | List all VMs

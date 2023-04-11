@@ -14,9 +14,9 @@ kvm_deployment:
       networks: # Update below list to attach interface of the networks
         - br-mgmt
         - br-vxlan
-    - name: ubuntu2204-test2
-      cpu: 1
-      memory: 1024
-      networks: # Update below list to attach interface of the networks
-        - br-mgmt
-        - br-vxlan
+    #- name: ubuntu2204-test2
+    #  cpu: 1
+    #  memory: 1024
+    #  networks: # Update below list to attach interface of the networks
+    #    - br-mgmt
+    #    - br-vxlan

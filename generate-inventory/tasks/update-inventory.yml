@@ -27,3 +27,14 @@
     fi
   args:
     executable: /bin/bash
+
+- name: Remove /var/tmp/{{_default_ip.stdout}}-netplan.yaml
+  ansible.builtin.file:
+    path: "/var/tmp/{{_default_ip.stdout}}-netplan.yaml"
+    state: absent
+
+- name: Template out netplan config for {{guest.name}}
+  ansible.builtin.template:
+    src: ubuntu-netplan.j2
+    dest: "/var/tmp/{{_default_ip.stdout}}-netplan.yaml"
+

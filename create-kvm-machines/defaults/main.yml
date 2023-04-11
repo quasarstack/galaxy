@@ -1,2 +1,4 @@
 target_vms_list: []
-force_clone: false
+cleanup: false
+
+user_data: "{{role_path}}/files/user-data.yml"

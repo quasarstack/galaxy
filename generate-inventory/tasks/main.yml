@@ -8,12 +8,12 @@
     minutes: 15
     prompt: "\nINFO: You are processing operation on above input:\n-> Review and continue"
 
-- name: generate-inventory | Run Asserts
+- name: generate-inventory | Run Asserts for machines input
   ansible.builtin.assert:
     that:
       - kvm_deployment.virtual_machines is defined
-      - lookup('env', 'kvm_guest_user') != ""
-      - lookup('env', 'kvm_guest_password') != ""
+      - kvm_guest_user is defined or kvm_guest_user != ""
+      - kvm_guest_password is defined or kvm_guest_password != ""
 
 - name: generate-inventory | List all VMs
   community.libvirt.virt:
@@ -51,7 +51,7 @@
   ansible.builtin.add_host:
     name: "{{item}}"
     groups: vms_group
-    ansible_user: "{{lookup('env', 'kvm_guest_user')}}"
-    ansible_password: "{{lookup('env', 'kvm_guest_password')}}"
-    ansible_become_pass: "{{lookup('env', 'kvm_guest_password')}}"
+    ansible_user: "{{kvm_guest_user}}"
+    ansible_password: "{{kvm_guest_password}}"
+    ansible_become_pass: "{{kvm_guest_password}}"
   with_items: "{{vms_inventory}}"

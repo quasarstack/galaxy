@@ -13,13 +13,15 @@
     that:
       - kvm_deployment.virtual_machines is defined
 
-# _guests.list_vms will store all kvm virtual machines after running this task.
-#- name: setup-static-ip | List all VMs
-#  community.libvirt.virt:
-#    command: list_vms
-#  register: _guests
-#  delegate_to: localhost
-#  become: true
+- name: setup-static-ip | Template out netplan config
+  ansible.builtin.template:
+    src: "/var/tmp/{{inventory_hostname}}-netplan.yaml"
+    dest: /etc/netplan/50-cloud-init.yaml
+    mode: 0644
+    owner: root
+    group: root
+  register: _static_config
 
-- name: setup-static-ip | Include static.yml
-  ansible.builtin.include_tasks: static-ip.yml
+- name: setup-static-ip | Enable network changes
+  command: netplan apply
+  when: _static_config is changed

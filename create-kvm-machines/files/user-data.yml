@@ -1,0 +1,33 @@
+#cloud-config
+
+hostname: localhost
+fqdn: localhost.net
+manage_etc_hosts: false
+ssh_pwauth: true
+
+system_info:
+  default_user:
+    - name: ubuntu
+      shell: /bin/bash
+      sudo: ALL=(ALL) NOPASSWD:ALL
+      lock_passwd: false
+      home: /home/ubuntu
+      ssh-authorized-keys:
+        - ""
+
+chpasswd:
+  list: 
+    - ubuntu:redhat123
+  expire: false
+    
+bootcmd:
+- dhclient
+
+package_update: true
+package_upgrade: true
+packages:
+  - ansible
+  - git
+
+runcmd:
+- ssh-keygen -A

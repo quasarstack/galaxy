@@ -18,8 +18,17 @@
   args:
     chdir: /var/lib/libvirt/images
 
-- name: Create {{guest.name}} VM using disk image {{guest.name}}.qcow2
-  ansible.builtin.shell: |
+- name: Template out meta-data config
+  ansible.builtin.template:
+    src: meta-data.j2
+    dest: "/var/tmp/{{guest.name}}-meta-data.yaml"
+    owner: root
+    group: root
+    mode: 0644
+
+- block:
+  - name: Create {{guest.name}} VM using disk image {{guest.name}}.qcow2
+    ansible.builtin.shell: |
       virt-install --name {{guest.name}} \
       --memory {{guest.memory}} \
       --vcpu {{guest.cpu}} --cpu host \
@@ -27,7 +36,13 @@
       --disk /var/lib/libvirt/images/{{guest.name}}.qcow2 \
       --import \
       --os-variant {{kvm_deployment.template.os_variant}} \
+      --cloud-init meta-data=/var/tmp/{{guest.name}}-meta-data.yaml \
       --noautoconsole
+  always:
+    - name: Remove /var/tmp/{{guest.name}}-meta-data.yaml
+      ansible.builtin.file:
+        path: "/var/tmp/{{guest.name}}-meta-data.yaml"
+        state: absent
 
 - name: Wait for {{guest.name}} to boot up
   ansible.builtin.pause:

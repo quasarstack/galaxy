@@ -24,17 +24,9 @@ Networks will be attached to VM in the specified order. If guest machine already
   gather_facts: true
   become: true
 
-  vars:
-    kvm_deployment:
-      template: ubuntu2204-vm-template
-      net_list:
-        - br-mgmt
-        - br-vxlan 
-      virtual_machines:
-        - name: ubuntu2204
-          networks: # Update below list to attach interface of the networks
-            - br-mgmt
-            - br-vxlan
+  vars_files:
+    - playbooks/vars/main.yml
+  
   roles:
   - role: attach-network-to-guest
 

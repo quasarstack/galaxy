@@ -20,21 +20,12 @@
   ansible.builtin.set_fact:
     vms_inventory: "{{vms_inventory + [_default_ip.stdout]}}"
 
-- name: generate-inventory | Take snapshot of {{guest.name}}
-  ansible.builtin.shell: |
-    if ! virsh snapshot-list --domain {{guest.name}}|egrep "{{guest.name}}-base";then
-      virsh snapshot-create-as --domain {{guest.name}} --name {{guest.name}}-base
-    fi
-  args:
-    executable: /bin/bash
-
-- name: Remove /var/tmp/{{_default_ip.stdout}}-netplan.yaml
-  ansible.builtin.file:
-    path: "/var/tmp/{{_default_ip.stdout}}-netplan.yaml"
-    state: absent
-
-- name: Template out netplan config for {{guest.name}}
-  ansible.builtin.template:
-    src: ubuntu-netplan.j2
-    dest: "/var/tmp/{{_default_ip.stdout}}-netplan.yaml"
+- name: generate-inventory | Add {{guest.name}} in {{machines_mapping}}
+  ansible.builtin.lineinfile:
+    path: "{{machines_mapping}}"
+    line: "{{item}}"
+    state: present
+  with_items:
+    - "  - name: {{guest.name}}"
+    - "    ip: {{_default_ip.stdout}}"
 

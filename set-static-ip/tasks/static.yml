@@ -1,8 +1,5 @@
 ---
 
-- ansible.builtin.debug:
-    msg: "Update static ip config for {{guest.name}}"
-
 - name: setup-static-ip | Template out netplan config
   ansible.builtin.template:
     src: ubuntu-netplan.j2
@@ -11,8 +8,13 @@
     owner: root
     group: root
   register: _static_config
+  with_items: "{{kvm_deployment.virtual_machines}}"
+  loop_control:
+    loop_var: guest
+  when: 
+    - machine.name == guest.name
+    - inventory_hostname == machine.ip
 
 - name: setup-static-ip | Enable network changes
   command: netplan apply
   when: _static_config is changed
-

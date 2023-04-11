@@ -1,1 +1,2 @@
 vms_inventory: []
+machines_mapping: /var/tmp/machines_mapping.yml

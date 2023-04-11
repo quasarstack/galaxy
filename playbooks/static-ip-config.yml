@@ -13,6 +13,9 @@
 - hosts: vms_group
   gather_facts: true
   become: true
+  
+  vars_files:
+    - ./vars/main.yml
 
   roles:
   - role: set-static-ip

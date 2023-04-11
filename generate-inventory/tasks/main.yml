@@ -36,6 +36,9 @@
     fi
   with_items: "{{kvm_deployment.virtual_machines}}"
 
+- name: generate-inventory | Create file {{machines_mapping}}
+  ansible.builtin.shell: echo "vms_name_ip_mapping:" > {{machines_mapping}}
+
 - ansible.builtin.meta: refresh_inventory
 
 - name: generate-inventory | Include tasks update-inventory.yml

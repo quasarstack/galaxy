@@ -1,0 +1,44 @@
+---
+
+# Following tasks need be run in KVM host
+
+- name: Shutdown {{kvm_vm}} 
+  ansible.builtin.shell: |
+    virsh shutdown {{kvm_vm}}
+    [ $? != 0 ] && echo "Failed to shutdown VM" && exit 1
+    sleep 10
+
+- name: Get {{kvm_vm}} attached disk
+  ansible.builtin.shell: virsh domblklist {{kvm_vm}}|awk '/vda/{print $2}'
+  register: _vm_disk
+
+#- name: Run sysprep on {{kvm_vm}}
+#  ansible.builtin.command: virt-sysprep -d {{kvm_vm}}
+
+- name: Undefine {{kvm_vm}}
+  ansible.builtin.command: virsh undefine {{kvm_vm}}
+
+- name: Copy {{_vm_disk.stdout}} to {{customized_image}}
+  ansible.builtin.copy: 
+    src: "{{_vm_disk.stdout}}"
+    dest: "{{customized_image}}"
+    mode: 0644
+    owner: root
+    group: root
+
+- name: Lookup {{customized_image}}
+  ansible.builtin.stat:
+    path: "{{customized_image}}"
+  register: _new_image
+
+- ansible.builtin.debug:
+    msg: "Successfully created new KVM QCOW2 image {{customized_image}}"
+  when: _new_image.stat.exists
+
+- ansible.builtin.fail:
+    msg: "Failed to created {{customized_image}}"
+
+- name: Remove {{_vm_disk.stdout}}
+  ansible.builtin.file:
+    path: "{{_vm_disk.stdout}}"
+    state: absent

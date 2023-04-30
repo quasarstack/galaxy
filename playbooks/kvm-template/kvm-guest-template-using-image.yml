@@ -7,12 +7,10 @@
   vars:
     guest_os: ubuntu2204
    
-  roles:
-  - role: kvm-guest-template
-
-
-# Configure KVM Guest Template
-# - vconsole
+  tasks:
+  - include_role: 
+      name: kvm-guest-template
+      tasks_from: create-guest-template-using-cloud-image.yml
 
 - hosts: new_kvm_guest
   gather_facts: true

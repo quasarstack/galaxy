@@ -1,3 +1,7 @@
+####----------------------------------------------------------####
+#### Variables used to create KVM template using qcow2 image  ####
+####----------------------------------------------------------####
+
 # `guest_os` input will be validated against `supported_images` list
 supported_images:
   - ubuntu2204
@@ -24,7 +28,6 @@ image_type:
       disk: ubuntu2204-vm-template.img
       size: 10G
     
-
 # ansible will check if image exists or not in local_path
 # if image exists, download will be skipped, else image will be downloaded
 # For a fixed behavior, set `image_download` value using extra_vars
@@ -34,3 +37,11 @@ cleanup: true
 
 user_data: "{{role_path}}/files/cloud-init/user-data.yml"
 network_config: "{{role_path}}/files/cloud-init/network-config.yml"
+
+####----------------------------------------------------------------####
+#### Variables used to produce template image using an existing VM  ####
+####----------------------------------------------------------------####
+
+kvm_vm: ubuntu2204-clone
+images_dir: /var/lib/libvirt/images
+customized_image: "{{images_dir}}/ubuntu2202-template.qcow2"

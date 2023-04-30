@@ -1,0 +1,36 @@
+---
+
+# Play to make changes in OS
+- hosts: all
+  gather_facts: true
+  become: yes
+
+  vars:
+    host_reboot: false
+  
+  pre_tasks: 
+  - name: Run Asserts
+    ansible.builtin.assert:
+      that:
+        - kvm_vm is defined
+
+  - name: Validate VM exists on KVM host
+    ansible.builtin.command: virsh dominfo {{kvm_vm}}
+    delegate_to: localhost
+  
+  tasks:    
+  - name: Include os-configuration.yml
+    ansible.builtin.include_role:
+      name: kvm-guest-template
+      tasks_from: os-configuration.yml
+
+# Play to run sysprep and create customized image
+- hosts: localhost
+  gather_facts: false
+  become: yes
+
+  tasks:    
+  - name: Include run-sysprep.yml from kvm-guest-template role
+    ansible.builtin.include_role:
+      name: kvm-guest-template
+      tasks_from: run-sysprep.yml

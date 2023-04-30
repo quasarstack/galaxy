@@ -1,0 +1,14 @@
+kvm_deployment:
+  template:
+    name: ubuntu2204-vm-template
+    image: ubuntu2202-template.qcow2
+    os_variant: 'ubuntu22.04'
+  default_network: default
+  virtual_machines:
+    - name: k8s-m01
+      cpu: 4
+      memory: 4096
+    - name: k8s-w01
+      cpu: 4
+      memory: 4096
+    

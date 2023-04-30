@@ -1,6 +1,6 @@
 # Attach a Network to a KVM Guest
 ***
-This role provides capability to create clones of a given template
+This role provides capability to create virtual machines using an qcow2 image.
 
 ## Required Ansible Collections
 ***
@@ -15,8 +15,12 @@ ansible-galaxy collection install community.libvirt
 ***
 
 1. Review [default vars](./defaults/main.yml) before running the this role. You can overwrite the vars using below playbook example.
-   
-2. Create a playbook
+
+2. `../playbooks/vars` contains variables files to create VM with customized configuration. Replace `vars_files` as per your requirement.
+
+3. Optional -> To force clean-up of existing machines pass extra var `-e cleanup=true`   
+
+4. Create a playbook
 ```yaml
 ---
 - hosts: localhost

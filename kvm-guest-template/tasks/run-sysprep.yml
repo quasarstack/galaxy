@@ -2,6 +2,17 @@
 
 # Following tasks need be run in KVM host
 
+- name: Lookup for existing {{customized_image}}
+  ansible.builtin.stat:
+    path: "{{customized_image}}"
+  register: _old_image
+
+- name: Remove old {{customized_image}}
+  ansible.builtin.file:
+    path: "{{customized_image}}"
+    state: absent
+  when: _old_image.stat.exists
+
 - name: Shutdown {{kvm_vm}} 
   ansible.builtin.shell: |
     virsh shutdown {{kvm_vm}}
@@ -19,12 +30,7 @@
   ansible.builtin.command: virsh undefine {{kvm_vm}}
 
 - name: Copy {{_vm_disk.stdout}} to {{customized_image}}
-  ansible.builtin.copy: 
-    src: "{{_vm_disk.stdout}}"
-    dest: "{{customized_image}}"
-    mode: 0644
-    owner: root
-    group: root
+  ansible.builtin.command: cp {{_vm_disk.stdout}} {{customized_image}}
 
 - name: Lookup {{customized_image}}
   ansible.builtin.stat:
@@ -37,6 +43,7 @@
 
 - ansible.builtin.fail:
     msg: "Failed to created {{customized_image}}"
+  when: not _new_image.stat.exists
 
 - name: Remove {{_vm_disk.stdout}}
   ansible.builtin.file:

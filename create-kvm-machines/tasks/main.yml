@@ -3,13 +3,13 @@
 - ansible.builtin.debug:
     var: kvm_deployment
 
-- name: create-vm-clones | Run Asserts
+- name: vm-install | Run Asserts
   ansible.builtin.assert:
     that:
       - kvm_deployment.template is defined
       - kvm_deployment.virtual_machines is defined
 
-- name: create-vm-clones | Append kvm_deployment.virtual_machines in target_vms_list
+- name: vm-install | Append kvm_deployment.virtual_machines in target_vms_list
   ansible.builtin.set_fact:
     target_vms_list: "{{target_vms_list + [item.name]}}"
   with_items: "{{kvm_deployment.virtual_machines}}"
@@ -28,10 +28,10 @@
 - block:
   - ansible.builtin.debug:
       msg:
-        - "You have forced cloning"
+        - "You have set cleanup=true"
         - "Existing VMs will be deleted"
 
-  - name: create-vm-clones | Remove VM if exists
+  - name: vm-install | Remove VM if exists
     ansible.builtin.shell: |
         if virsh list --all |egrep {{item}};then
           if ! virsh domstate {{item}}|egrep "shut off";then
@@ -45,26 +45,26 @@
   when: cleanup|bool
 
 # _guests.list_vms will store all kvm virtual machines after running this task.
-- name: create-vm-clones | List all VMs
+- name: vm-install | List all VMs
   community.libvirt.virt:
     command: list_vms
   register: _guests
 
-- name: create-vm-clones | Check guest_exists=false if guest not available
+- name: vm-install | Check guest_exists=false if guest not available
   ansible.builtin.debug:
     msg: "Cloning will be skipped for {{item.name}}. It already exists"
   with_items: "{{kvm_deployment.virtual_machines}}"
   when: item.name in _guests.list_vms
 
-#- name: create-vm-clones | syspend {{kvm_deployment.template}}
+#- name: vm-install | syspend {{kvm_deployment.template}}
 #  ansible.builtin.command: virsh suspend {{kvm_deployment.template}}
 
-- name: create-vm-clones | Include virt-clone.yml
-  ansible.builtin.include_tasks: virt-clone.yml
+- name: vm-install | Include virt-install.yml
+  ansible.builtin.include_tasks: virt-install.yml
   with_items: "{{kvm_deployment.virtual_machines}}"
   loop_control:
     loop_var: guest
   when: guest.name not in _guests.list_vms
 
-#- name: create-vm-clones | resume {{kvm_deployment.template}}
+#- name: vm-install | resume {{kvm_deployment.template}}
 #  ansible.builtin.command: virsh resume {{kvm_deployment.template}}

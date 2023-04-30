@@ -58,3 +58,6 @@
     ansible_password: "{{kvm_guest_password}}"
     ansible_become_pass: "{{kvm_guest_password}}"
   with_items: "{{vms_inventory}}"
+
+- ansible.builtin.debug:
+    msg: 

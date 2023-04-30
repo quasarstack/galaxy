@@ -25,10 +25,10 @@
     name: os-tuning
     tasks_from: dhcp-identifier.yml
 
-- name: Remove /etc/machine
-  ansible.builtin.file:
-    path: /etc/machine-id
-    state: absent
+#- name: Remove /etc/machine
+#  ansible.builtin.file:
+#    path: /etc/machine-id
+#    state: absent
 
 - name: Generate SSH Keys
   ansible.builtin.command: ssh-keygen -A

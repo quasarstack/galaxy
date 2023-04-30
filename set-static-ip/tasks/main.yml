@@ -24,13 +24,14 @@
   ansible.builtin.include_vars: "{{machines_mapping}}"
 
 # vms_name_ip_mapping is coming from machines_mapping file
-- name: setup-static-ip | Include tasks from statuc.yml
+- name: setup-static-ip | Include tasks from static.yml
   ansible.builtin.include_tasks: static.yml
   with_items: "{{vms_name_ip_mapping}}"
   loop_control:
     loop_var: machine
 
-- name: Remove {{machines_mapping}}
-  ansible.builtin.file:
-    path: "{{machines_mapping}}"
-    state: absent
+- name: Review Generated Inventory
+  ansible.builtin.debug:
+    msg: "{{machines_mapping}} machines inventory is retained for further usages"
+  delegate_to: localhost
+  run_once: true

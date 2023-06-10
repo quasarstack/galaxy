@@ -1,0 +1,6 @@
+# Example when you just to tweak cpu/memory for existing machines
+
+kvm_guest_machines:
+  - name: ubuntu2204
+    cpu: 1
+    memory: 1024 # in KB

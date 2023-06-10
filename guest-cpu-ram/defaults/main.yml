@@ -1,13 +1,1 @@
-kvm_deployment:
-  template: ubuntu2204-vm-template # this var wont be used in role
-  net_list: # This var is not used this role
-    - br-mgmt
-    - br-vxlan 
-  virtual_machines:
-    - name: ubuntu2204
-      cpu: 1
-      memory: 1024 # in KB
-      networks: # this var wont be used in role
-        - br-mgmt
-
 guest_exists: true

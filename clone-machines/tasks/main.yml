@@ -1,0 +1,14 @@
+---
+
+- name: Check if source machine is available on host
+  ansible.builtin.command: virsh dominfo {{ source_machine }}
+
+- name: Check if target machines are already exists
+  ansible.builtin.shell: virsh dominfo {{ item }}
+  register: _check_target
+  failed_when: _check_target.rc == 0
+  with_items: "{{ target_machines }}"
+
+- name: Create Machine Clone
+  ansible.builtin.command: virt-clone -o {{ source_machine }} -n {{ item }} --auto-clone
+  with_items: "{{ target_machines }}"

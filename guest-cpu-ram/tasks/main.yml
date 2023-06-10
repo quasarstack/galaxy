@@ -1,17 +1,32 @@
 ---
 
-- ansible.builtin.debug:
-    var: kvm_deployment
+- name: Run Asserts for kvm_deployment 
+  block:
+  - ansible.builtin.debug:
+      var: kvm_deployment
 
+  - name: guest-cpu-ram | Run Asserts
+    ansible.builtin.assert:
+      that:
+        - kvm_deployment.virtual_machines is defined
+
+  - name: Set fact kvm_guest_machines
+    ansible.builtin.set_fact:
+      kvm_guest_machines: "{{ kvm_deployment.virtual_machines }}"
+  when: kvm_deployment is defined
+
+- name: Run assert for kvm_guest_machines
+  ansible.builtin.assert:
+    that:
+      - kvm_guest_machines is defined and kvm_guest_machines != ""
+
+- name: Show targeted KVM machines
+  ansible.builtin.debug:
+    var: kvm_guest_machines
 - ansible.builtin.pause:
     echo: yes
     minutes: 15
     prompt: "\nINFO: You are processing operation on above input:\n-> Review and continue"
-
-- name: guest-cpu-ram | Run Asserts
-  ansible.builtin.assert:
-    that:
-      - kvm_deployment.virtual_machines is defined
 
 # _guests.list_vms will store all kvm virtual machines after running this task.
 - name: guest-cpu-ram |List all VMs
@@ -22,7 +37,7 @@
 - name: guest-cpu-ram |Check guest_exists=false if guest not available
   ansible.builtin.set_fact:
     guest_exists: false
-  with_items: "{{kvm_deployment.virtual_machines}}"
+  with_items: "{{ kvm_guest_machines }}"
   when: not item.name in _guests.list_vms
 
 - name: guest-cpu-ram |Run asserts
@@ -30,11 +45,11 @@
     that:
       - guest_exists|bool
     fail_msg:
-      - "Review kvm_deployment.virtual_machines"
+      - "Review kvm_guest_machines"
       - "Provided resources must be exists on KVM host"
 
 - name: guest-cpu-ram |Include cpu-mem.yml
   ansible.builtin.include_tasks: cpu-mem.yml
-  with_items: "{{kvm_deployment.virtual_machines}}"
+  with_items: "{{ kvm_guest_machines }}"
   loop_control:
     loop_var: guest

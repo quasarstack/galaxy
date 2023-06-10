@@ -1,0 +1,4 @@
+source_machine: ubuntu2204
+target_machines:
+  - k8s-m01
+  - k8s-w01

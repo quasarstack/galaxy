@@ -1,5 +1,6 @@
 ---
 
+- 
 - name: Current proc/cmdline
   ansible.builtin.debug:
     msg: "{{lookup('ansible.builtin.file', '/proc/cmdline')}}"
@@ -50,7 +51,14 @@
     command: grub2-mkconfig -o /boot/grub2/grub.cfg
     when: ansible_os_family == "RedHat"
 
+  # Tells KVM host to reboot the machine
   - name: set fact host_reboot=true
     ansible.builtin.set_fact:
       host_reboot: true
+
+  - name: Reboot Machine
+    ansible.builtin.reboot:
+      reboot_timeout: 300
+      test_command: uptime
+    when: machine_reboot|bool
   when: _update_grub_param is changed or _update_grub_default_param is changed
